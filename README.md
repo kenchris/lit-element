@@ -15,6 +15,10 @@ A base class for creating web components using [lit-html](https://travis-ci.org/
 * Properties can be reflected with any attribute you define
 * Depends on ES modules
 
+### Demos
+
+Demos can be found [here](https://kenchris.github.io/lit-element/).
+
 ### Basic example
 
 Simple write your HTML code using ```lit-html``` by creating a ```renderCallback()``` method.
