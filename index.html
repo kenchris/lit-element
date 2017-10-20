@@ -1,5 +1,5 @@
 <script type="module">
-  import { LitElement, html } from '/src/lit-element.js';
+  import { LitElement, html } from './src/lit-element.js';
   
   class CodePreview extends LitElement {
     static get properties() {
@@ -36,7 +36,7 @@
 <html>
   <code-preview title="Basic example">
     <script type="module">
-      import { LitElement, html } from '/src/lit-element.js';
+      import { LitElement, html } from './src/lit-element.js';
 
       class HelloWorld extends LitElement {
         renderCallback() {
@@ -52,7 +52,7 @@
 
   <code-preview title="Querying element using id">
     <script type="module">
-      import { LitElement, html } from '/src/lit-element.js';
+      import { LitElement, html } from './src/lit-element.js';
       
       class ColorMarker extends LitElement {
         changeColor() {
@@ -82,7 +82,7 @@
 
   <code-preview title="Using properties">
     <script type="module">
-      import { LitElement, html } from '/src/lit-element.js';
+      import { LitElement, html } from './src/lit-element.js';
 
       class SuperHelloWorld extends LitElement {
         static get properties() {
