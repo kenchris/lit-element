@@ -1,16 +1,24 @@
 {
-  "name": "lit-element",
-  "version": "0.5.0",
+  "name": "lit-html-element",
+  "version": "0.6.0",
   "description": "A base class for creating web components using lit-html",
-  "main": "src/lit-element.js",
-  "module": "src/lit-element.js",
+  "main": "lit-element.js",
+  "module": "lit-element.js",
+  "files": [
+    "/lit-element.js",
+    "/lit-element.js.map",
+    "/lit-element.d.ts",
+    "/src/",
+    "!/docs"
+  ],
   "directories": {
     "test": "tests"
   },
   "scripts": {
     "build": "tsc",
     "lint": "tslint --project ./",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "checksize": "uglifyjs lit-element.js -mc --toplevel | gzip -9 | wc -c"
   },
   "author": "Kenneth Rohde Christiansen <kenneth.christiansen@gmail.com>",
   "homepage": "https://github.com/kenchris/lit-element",
@@ -24,6 +32,7 @@
   },
   "devDependencies": {
     "tslint": "^5.7.0",
-    "typescript": "^2.4.1"
+    "typescript": "^2.4.1",
+    "uglify-es": "^3.0.27"
   }
 }
