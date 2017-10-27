@@ -98,7 +98,7 @@ export class LitElement extends HTMLElement {
     const { type: typeFn } = this.constructor.properties[prop];
 
     if (typeFn.name === 'Boolean') {
-      this[symbol] = (newValue === prop);
+      this[symbol] = !newValue || (newValue === prop);
     } else {
       this[symbol] = typeFn(newValue)
     }
