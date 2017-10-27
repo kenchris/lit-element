@@ -1,10 +1,10 @@
-import { html, render } from '/node_modules/lit-html/lib/lit-extended.js';
-import { TemplateResult } from '/node_modules/lit-html/lit-html.js';
+import { html, render } from '../node_modules/lit-html/lib/lit-extended.js';
+import { TemplateResult } from '../node_modules/lit-html/lit-html.js';
 
-export { html } from '/node_modules/lit-html/lib/lit-extended.js';
+export { html } from '../node_modules/lit-html/lib/lit-extended.js';
 
 export interface PropertyDeclaration {
-  type: Boolean | Number | String | Function;
+  type: any;
   value?: any;
   attrName?: string
 }
@@ -45,9 +45,9 @@ export class LitElement extends HTMLElement {
     for (const prop in this.properties) {
       const { type: typeFn, value, attrName } = this.properties[prop];
 
-      Object.defineProperty(this.prototype, prop, {
+      Object.defineProperty(this.prototype, prop, <any>{
         get() { return this._values[prop] || value; },
-        set(v) {
+        set(v:any) {
           let value = typeFn(v)
           this._values[prop] = value;
           if (attrName) {
@@ -69,13 +69,14 @@ export class LitElement extends HTMLElement {
   }
 
   renderCallback(): TemplateResult {
+    //FBB: idea -> should we call this with `this` so you can use destructuring assignment (like preact does with state and props)
     return html``;
   }
   
   attributeChangedCallback(prop: string, _oldValue: string, newValue: string) {
-    const { type: typeFn } = this.constructor.properties[prop];
-
+    const { type: typeFn } = (this.constructor as any).properties[prop];
     if (typeFn.name === 'Boolean') {
+      //FBB: I believe there is a bug here! 
       this._values[prop] = !newValue || (newValue === prop);
     } else {
       this._values[prop] = typeFn(newValue)
@@ -94,7 +95,7 @@ export class LitElement extends HTMLElement {
       this._needsRender = true;
       Promise.resolve().then(() => {
         this._needsRender = false;
-        render(this.renderCallback(), this.shadowRoot);
+        render(this.renderCallback(), (this.shadowRoot as any));
       });
     }
   }
