@@ -3,12 +3,30 @@ import { TemplateResult } from '/node_modules/lit-html/lit-html.js';
 
 export { html } from '/node_modules/lit-html/lib/lit-extended.js';
 
-export class LitElement extends HTMLElement {
-  _needsRender: Boolean = false;
-  _$: Map<string, Node>;
-  static properties: any = {};
+export interface PropertyDeclaration {
+  type: Boolean | Number | String | Function;
+  value?: any;
+  attrName?: string
+}
 
-  static get observedAttributes() {
+interface PropertyValues {
+  [key: string]: any;
+}
+
+interface ElementCache {
+  [key: string]: any; // HTMLElement
+}
+
+export class LitElement extends HTMLElement {
+  private _needsRender: boolean = false;
+  private _lookupCache: ElementCache = [];
+  private _values: PropertyValues = [];
+
+  static get properties(): PropertyDeclaration[] {
+    return [];
+  }
+
+  static get observedAttributes(): string[] {
     let attrs = [];
     for (const prop in this.properties) {
       if (this.properties[prop].attrName) {
@@ -21,19 +39,17 @@ export class LitElement extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    this._needsRender = false;
   }
 
   static withProperties() {
     for (const prop in this.properties) {
-      const symbol = Symbol.for(prop);
       const { type: typeFn, value, attrName } = this.properties[prop];
 
       Object.defineProperty(this.prototype, prop, {
-        get() { return this[symbol] || value; },
+        get() { return this._values[prop] || value; },
         set(v) {
           let value = typeFn(v)
-          this[symbol] = value;
+          this._values[prop] = value;
           if (attrName) {
             if (typeFn.name === 'Boolean') {
               if (!value) {
@@ -57,13 +73,12 @@ export class LitElement extends HTMLElement {
   }
   
   attributeChangedCallback(prop: string, _oldValue: string, newValue: string) {
-    const symbol = Symbol.for(prop);
     const { type: typeFn } = this.constructor.properties[prop];
 
     if (typeFn.name === 'Boolean') {
-      this[symbol] = !newValue || (newValue === prop);
+      this._values[prop] = !newValue || (newValue === prop);
     } else {
-      this[symbol] = typeFn(newValue)
+      this._values[prop] = typeFn(newValue)
     }
 
     this.invalidate();
@@ -85,12 +100,13 @@ export class LitElement extends HTMLElement {
   }
 
   $(id: string) {
-    if (!this._$) {
-      this._$ = new Map<string, Node>();
-    }
-    let value = this._$[id];
-    if (!value) {
-      value = this._$[id] = this.shadowRoot.getElementById(id);
+    let value = this._lookupCache[id];
+    if (!value && this.shadowRoot) {
+      const element = this.shadowRoot.getElementById(id);
+      if (element) {
+        value = element;
+        this._lookupCache[id] = element;
+      }
     }
     return value;
   }
