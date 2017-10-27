@@ -1,48 +1,12 @@
-// @ts-check
 import { html, render } from '/node_modules/lit-html/lib/lit-extended.js';
+import { TemplateResult } from '/node_modules/lit-html/lit-html.js';
 
 export { html } from '/node_modules/lit-html/lib/lit-extended.js';
 
-/*
- 
-We skip the case conversion and have the property definition
-include the attribute name. No ambiguity that way.
-
-USAGE EXAMPLE:
-
-export class HelloWorld extends LitElement {
-  static get properties() {
-    return {
-      uppercase: {
-        type: Boolean,
-        value: false,
-        attrName: "uppercase"
-      }
-    }
-  }
-
-  async connectedCallback() {
-    await super.connectedCallback();
-    this.$("box").style.backgroundColor = "blue";
-  }
-  
-  renderCallback() {
-    return html`
-      <style>
-        .uppercase {
-          text-transform: uppercase;          
-        }
-      </style>
-      <div id="box" class$="${this.uppercase ? 'uppercase' : ''}">
-        <slot>Hello World</slot>
-      </div>
-    `;
-  }
-}
-customElements.define('hello-world', HelloWorld.withProperties());
-*/
-
 export class LitElement extends HTMLElement {
+  _needsRender: Boolean = false;
+  _$: Map<string, Node>;
+  static properties: any = {};
 
   static get observedAttributes() {
     let attrs = [];
@@ -84,16 +48,15 @@ export class LitElement extends HTMLElement {
           this.invalidate();
         },
       });
-
-      return this;
     }
+    return this;
   }
 
-  renderCallback() {
+  renderCallback(): TemplateResult {
     return html``;
   }
   
-  attributeChangedCallback(prop, oldValue, newValue) {
+  attributeChangedCallback(prop: string, _oldValue: string, newValue: string) {
     const symbol = Symbol.for(prop);
     const { type: typeFn } = this.constructor.properties[prop];
 
@@ -121,9 +84,9 @@ export class LitElement extends HTMLElement {
     }
   }
 
-  $(id) {
+  $(id: string) {
     if (!this._$) {
-      this._$ = new Map;
+      this._$ = new Map<string, Node>();
     }
     let value = this._$[id];
     if (!value) {
