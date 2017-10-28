@@ -89,13 +89,15 @@ export class LitElement extends HTMLElement {
     this.invalidate();
   }
 
-  invalidate() {
+  async invalidate() {
     if (!this._needsRender) {
       this._needsRender = true;
-      Promise.resolve().then(() => {
-        this._needsRender = false;
-        render(this.renderCallback(), this.shadowRoot as any);
-      });
+      // Schedule the following as micro task, which runs before
+      // requestAnimationFrame. All additional invalidate() calls
+      // before will be ignored.
+      // https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/
+      this._needsRender = await false;
+      render(this.renderCallback(), this.shadowRoot as any);
     }
   }
 
