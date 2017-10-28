@@ -22,13 +22,13 @@ Demos can be found [here](https://kenchris.github.io/lit-element/).
 
 ### Basic example
 
-Simple write your HTML code using ```lit-html``` by creating a ```renderCallback()``` method.
+Simple write your HTML code using ```lit-html``` by creating a ```render()``` method.
 
 ```javascript 
 import { LitElement, html } from '/src/lit-element.js';
 
   class HelloWorld extends LitElement {
-    renderCallback() {
+    render() {
       return html`
         <div style="font-weight: bold">Hello World</div>
       `;
@@ -54,7 +54,7 @@ In the below example, we call ```this.changeColor()``` whenever the button is pr
       this.$("wrapper").style.backgroundColor = `#${color}`;
     }
 
-    renderCallback() {
+    render() {
       return html`
         <style>
           div {
@@ -96,7 +96,7 @@ import { LitElement, html } from '/src/lit-element.js';
       }
     }
     
-    renderCallback() {
+    render() {
       return html`
         <style>
           .uppercase {

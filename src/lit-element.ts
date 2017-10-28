@@ -68,7 +68,7 @@ export class LitElement extends HTMLElement {
     return this;
   }
 
-  renderCallback(): TemplateResult {
+  render(): TemplateResult {
     return html``;
   }
 
@@ -97,7 +97,7 @@ export class LitElement extends HTMLElement {
       // before will be ignored.
       // https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/
       this._needsRender = await false;
-      render(this.renderCallback(), this.shadowRoot as any);
+      render(this.render(), this.shadowRoot as any);
     }
   }
 

@@ -12,4 +12,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 Fixed bug where removing a boolean attribute didn't make the property false.
 Fixed import paths
 
-<!-- ## Unreleased -->
+## Unreleased
+
+### Changed
+- Changed the name of the rendering method from ´renderCallback´ to just ´render´ as per discussion (https://github.com/kenchris/lit-element/issues/5)
+
+
+
