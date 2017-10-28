@@ -19,7 +19,7 @@ gulp.task('compile', function(){
         noImplicitReturns: true,
         noFallthroughCasesInSwitch: true
       }))
-      .pipe(replace(/..\/node_modules/g, '../..'))
+      .pipe(replace(/..\/node_modules/g, '..'))
       .pipe(gulp.dest('.'));
 
     gulp.src('lit-element.js')
