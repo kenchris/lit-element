@@ -6,7 +6,7 @@ export { html } from '../node_modules/lit-html/lib/lit-extended.js';
 export interface PropertyDeclaration {
   type: (a: any) => any;
   value?: any;
-  attrName?: string
+  attrName?: string;
 }
 
 interface PropertyValues {
@@ -27,7 +27,7 @@ export class LitElement extends HTMLElement {
   }
 
   static get observedAttributes(): string[] {
-    let attrs = [];
+    const attrs = [];
     for (const prop in this.properties) {
       if (this.properties[prop].attrName) {
         attrs.push(prop);
@@ -48,12 +48,12 @@ export class LitElement extends HTMLElement {
       Object.defineProperty(this.prototype, prop, {
         get(this: LitElement) { return this._values[prop] || value; },
         set(this: LitElement, v) {
-          let value = typeFn(v)
+          const value = typeFn(v);
           this._values[prop] = value;
           if (attrName) {
             if (typeFn.name === 'Boolean') {
               if (!value) {
-                this.removeAttribute(attrName);  
+                this.removeAttribute(attrName);
               } else {
                 this.setAttribute(attrName, attrName);
               }
@@ -71,14 +71,14 @@ export class LitElement extends HTMLElement {
   renderCallback(): TemplateResult {
     return html``;
   }
-  
+
   attributeChangedCallback(prop: string, _oldValue: string, newValue: string) {
     const { type: typeFn } = (this.constructor as any).properties[prop];
 
     if (typeFn.name === 'Boolean') {
       this._values[prop] = !newValue || (newValue === prop);
     } else {
-      this._values[prop] = typeFn(newValue)
+      this._values[prop] = typeFn(newValue);
     }
 
     this.invalidate();
@@ -110,4 +110,4 @@ export class LitElement extends HTMLElement {
     }
     return value;
   }
-};
+}
