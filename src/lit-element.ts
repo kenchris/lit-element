@@ -1,7 +1,7 @@
-import { html, render } from '/node_modules/lit-html/lib/lit-extended.js';
-import { TemplateResult } from '/node_modules/lit-html/lit-html.js';
+import { html, render } from '../node_modules/lit-html/lib/lit-extended.js';
+import { TemplateResult } from '../node_modules/lit-html/lit-html.js';
 
-export { html } from '/node_modules/lit-html/lib/lit-extended.js';
+export { html } from '../node_modules/lit-html/lib/lit-extended.js';
 
 export interface PropertyDeclaration {
   type: (a: any) => any;
@@ -94,7 +94,7 @@ export class LitElement extends HTMLElement {
       this._needsRender = true;
       Promise.resolve().then(() => {
         this._needsRender = false;
-        render(this.renderCallback(), this.shadowRoot);
+        render(this.renderCallback(), this.shadowRoot as any);
       });
     }
   }

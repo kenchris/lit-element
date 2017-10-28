@@ -1,1 +1,4 @@
 node_modules
+lit-element.d.ts
+lit-element.js
+lit-element.js.map
