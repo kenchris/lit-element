@@ -4,7 +4,7 @@ import { TemplateResult } from '/node_modules/lit-html/lit-html.js';
 export { html } from '/node_modules/lit-html/lib/lit-extended.js';
 
 export interface PropertyDeclaration {
-  type: Boolean | Number | String | Function;
+  type: (a: any) => any;
   value?: any;
   attrName?: string
 }
@@ -46,8 +46,8 @@ export class LitElement extends HTMLElement {
       const { type: typeFn, value, attrName } = this.properties[prop];
 
       Object.defineProperty(this.prototype, prop, {
-        get() { return this._values[prop] || value; },
-        set(v) {
+        get(this: LitElement) { return this._values[prop] || value; },
+        set(this: LitElement, v) {
           let value = typeFn(v)
           this._values[prop] = value;
           if (attrName) {
@@ -73,7 +73,7 @@ export class LitElement extends HTMLElement {
   }
   
   attributeChangedCallback(prop: string, _oldValue: string, newValue: string) {
-    const { type: typeFn } = this.constructor.properties[prop];
+    const { type: typeFn } = (this.constructor as any).properties[prop];
 
     if (typeFn.name === 'Boolean') {
       this._values[prop] = !newValue || (newValue === prop);
