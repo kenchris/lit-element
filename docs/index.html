@@ -12,7 +12,7 @@
       }
     }
 
-    renderCallback() {
+    render() {
       return html`
         <style>
           pre {
@@ -39,7 +39,7 @@
       import { LitElement, html } from '/node_modules/lit-html-element/lit-element.js';
 
       class HelloWorld extends LitElement {
-        renderCallback() {
+        render() {
           return html`
             <div style="font-weight: bold">Hello World</div>
           `;
@@ -61,7 +61,7 @@
           this.$("wrapper").style.backgroundColor = `#${color}`;
         }
     
-        renderCallback() {
+        render() {
           return html`
             <style>
               div {
@@ -95,7 +95,7 @@
           }
         }
         
-        renderCallback() {
+        render() {
           return html`
             <style>
               .uppercase {
