@@ -1,6 +1,6 @@
 {
   "name": "lit-html-element",
-  "version": "0.6.6",
+  "version": "0.6.8",
   "description": "A base class for creating web components using lit-html",
   "main": "lit-element.js",
   "module": "lit-element.js",
@@ -14,7 +14,7 @@
     "test": "tests"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "gulp compile",
     "lint": "tslint --project ./",
     "test": "echo \"Error: no test specified\" && exit 1",
     "checksize": "uglifyjs lit-element.js -mc --toplevel | gzip -9 | wc -c"
@@ -30,6 +30,9 @@
     "lit-html": "^0.7.1"
   },
   "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-replace-path": "^0.4.0",
+    "gulp-tsc": "^1.3.2",
     "tslint": "^5.7.0",
     "typescript": "^2.4.1",
     "uglify-es": "^3.0.27"

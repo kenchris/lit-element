@@ -10,5 +10,6 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
    Unreleased section, uncommenting the header as necessary.
 -->
 Fixed bug where removing a boolean attribute didn't make the property false.
+Fixed import paths
 
 <!-- ## Unreleased -->
