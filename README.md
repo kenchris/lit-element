@@ -1,6 +1,7 @@
 # lit-element
 A base class for creating web components using [lit-html](https://travis-ci.org/PolymerLabs/lit-html)
 
+`lit-element` can be installed via the [lit-html-element](https://www.npmjs.com/package/lit-html-element) NPM package.
 
 ## Overview
 

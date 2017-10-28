@@ -1,6 +1,6 @@
 {
   "name": "lit-html-element",
-  "version": "0.6.5",
+  "version": "0.6.6",
   "description": "A base class for creating web components using lit-html",
   "main": "lit-element.js",
   "module": "lit-element.js",
