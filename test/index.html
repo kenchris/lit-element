@@ -1,0 +1,58 @@
+<head>
+    <meta charset="utf-8">
+    <script src="../node_modules/web-component-tester/browser.js"></script>
+  </head>
+  <body>
+    <script type="module">
+      import { LitElement, html } from '/node_modules/lit-html-element/lit-element.js';
+
+      class TestElement extends LitElement {
+        static get properties() {
+          return {
+            stringProp: {
+              type: String,
+              value: "Example",
+              attrName: "string-attr"
+            },
+            booleanProp: {
+              type: Boolean,
+              value: true,
+              attrName: "booleanAttr"
+            }
+          }
+        }
+      
+        renderCallback() {
+          return html`
+            <h2>String: ${this.stringProp}</h2>
+            <h2>Boolean: ${this.booleanProp}</h2>
+          `;
+        }
+     }
+
+     customElements.define('test-element', TestElement.withProperties());
+
+     const testElement = document.createElement('test-element');
+     document.body.appendChild(testElement);
+
+     suite('TestElement', () => {
+        test('stringProp', () => {
+          const def = TestElement.properties.stringProp;
+
+          assert.isTrue(typeof(testElement.stringProp) === typeof(def.type()));
+
+          assert.isTrue(testElement.stringProp === "Example");
+          // assert.isTrue(testElement.getAttribute('string-attr') === "Example");
+
+          testElement.stringProp = "Hello";
+          assert.isTrue(testElement.stringProp === "Hello");
+          assert.isTrue(testElement.getAttribute('string-attr') === "Hello");
+
+          testElement.setAttribute('string-attr', "World");
+          assert.isTrue(testElement.getAttribute('string-attr') === "World");
+          assert.isTrue(testElement.stringProp === "World");
+        });
+      });
+    </script>
+  </body>
+  </html>

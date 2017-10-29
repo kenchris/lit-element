@@ -21,6 +21,7 @@ export class LitElement extends HTMLElement {
   private _needsRender: boolean = false;
   private _lookupCache: ElementCache = [];
   private _values: PropertyValues = [];
+  private _attrMap: any = {};
 
   static get properties(): PropertyDeclaration[] {
     return [];
@@ -28,9 +29,11 @@ export class LitElement extends HTMLElement {
 
   static get observedAttributes(): string[] {
     const attrs = [];
+
     for (const prop in this.properties) {
-      if (this.properties[prop].attrName) {
-        attrs.push(prop);
+      const attrName = this.properties[prop].attrName;
+      if (attrName) {
+        attrs.push(attrName);
       }
     }
     return attrs;
@@ -39,6 +42,12 @@ export class LitElement extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    for (const prop in (this.constructor as any).properties) {
+      const attrName = (this.constructor as any).properties[prop].attrName;
+      if (attrName) {
+        this._attrMap[attrName] = prop;
+      }
+    }
   }
 
   static withProperties() {
@@ -65,6 +74,7 @@ export class LitElement extends HTMLElement {
         },
       });
     }
+
     return this;
   }
 
@@ -72,7 +82,8 @@ export class LitElement extends HTMLElement {
     return html``;
   }
 
-  attributeChangedCallback(prop: string, _oldValue: string, newValue: string) {
+  attributeChangedCallback(attrName: string, _oldValue: string, newValue: string) {
+    const prop = this._attrMap[attrName];
     const { type: typeFn } = (this.constructor as any).properties[prop];
 
     if (typeFn.name === 'Boolean') {
