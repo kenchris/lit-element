@@ -108,7 +108,7 @@ export class LitElement extends HTMLElement {
       // before will be ignored.
       // https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/
       this._needsRender = await false;
-      render(this.render(), this.shadowRoot as any);
+      render(this.render(), this.shadowRoot as ShadowRoot);
     }
   }
 
