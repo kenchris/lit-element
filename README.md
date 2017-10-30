@@ -113,5 +113,13 @@ import { LitElement, html } from '/src/lit-element.js';
 ```
 ```html
    <hello-world></hello-world>
-   <hello-world uppercase="uppercase">¡Hola, mundo!</hello-world>
+   <hello-world uppercase>¡Hola, mundo!</hello-world>
 ```
+
+## Advanced
+
+When any of the properties in ```properties()``` change, `lit-element` will automatically re-render. The same goes for attributes which are mapped to properties via ```attrName```.
+
+If you need to re-render manually, you can trigger a re-render via a call to ```invalidate()```. This will schedule a microtask which will render the content just before next ```requestAnimationFrame```.
+
+If you need to do extra work before rendering, like setting a property based on another property, a subclass can override ```renderCallback()``` to do work before or after the base class calls ```render()```, including setting the dependent property before ```render()```.

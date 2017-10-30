@@ -81,6 +81,10 @@ export class LitElement extends HTMLElement {
     return this;
   }
 
+  renderCallback() {
+    render(this.render(), this.shadowRoot as ShadowRoot);
+  }
+
   render(): TemplateResult {
     return html``;
   }
@@ -99,7 +103,6 @@ export class LitElement extends HTMLElement {
   }
 
   connectedCallback() {
-    // FIXME: Should we force render here?
     this.invalidate();
   }
 
@@ -111,7 +114,7 @@ export class LitElement extends HTMLElement {
       // before will be ignored.
       // https://jakearchibald.com/2015/tasks-microtasks-queues-and-schedules/
       this._needsRender = await false;
-      render(this.render(), this.shadowRoot as ShadowRoot);
+      this.renderCallback();
     }
   }
 
