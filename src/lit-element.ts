@@ -55,7 +55,10 @@ export class LitElement extends HTMLElement {
       const { type: typeFn, value, attrName } = this.properties[prop];
 
       Object.defineProperty(this.prototype, prop, {
-        get(this: LitElement) { return this._values[prop] || value; },
+        get(this: LitElement) {
+          const v = this._values[prop];
+          return (v !== undefined) ? v : value;
+        },
         set(this: LitElement, v) {
           const value = typeFn(v);
           this._values[prop] = value;
@@ -87,7 +90,7 @@ export class LitElement extends HTMLElement {
     const { type: typeFn } = (this.constructor as any).properties[prop];
 
     if (typeFn.name === 'Boolean') {
-      this._values[prop] = (newValue === '') || (newValue === prop);
+      this._values[prop] = (newValue === '') || (newValue === attrName);
     } else {
       this._values[prop] = typeFn(newValue);
     }

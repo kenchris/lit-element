@@ -17,12 +17,12 @@
             booleanProp: {
               type: Boolean,
               value: true,
-              attrName: "booleanAttr"
+              attrName: "boolean-attr"
             }
           }
         }
       
-        renderCallback() {
+        render() {
           return html`
             <h2>String: ${this.stringProp}</h2>
             <h2>Boolean: ${this.booleanProp}</h2>
@@ -35,22 +35,55 @@
      const testElement = document.createElement('test-element');
      document.body.appendChild(testElement);
 
-     suite('TestElement', () => {
-        test('stringProp', () => {
-          const def = TestElement.properties.stringProp;
+     suite('String property', () => {
+        const def = TestElement.properties.stringProp;
 
+        test('Has correct type', () => {
           assert.isTrue(typeof(testElement.stringProp) === typeof(def.type()));
+        });
 
+        test('Has correct default value', () => {
           assert.isTrue(testElement.stringProp === "Example");
-          // assert.isTrue(testElement.getAttribute('string-attr') === "Example");
+        });
 
+        test('Changing property reflects attribute', () => {
           testElement.stringProp = "Hello";
           assert.isTrue(testElement.stringProp === "Hello");
           assert.isTrue(testElement.getAttribute('string-attr') === "Hello");
+        });
 
+        test('Changing attribute reflects property', () => {
           testElement.setAttribute('string-attr', "World");
           assert.isTrue(testElement.getAttribute('string-attr') === "World");
           assert.isTrue(testElement.stringProp === "World");
+        });
+      });
+
+      suite('Boolean property', () => {
+        const def = TestElement.properties.booleanProp;
+
+        test('Has correct type', () => {
+          assert.isTrue(typeof(testElement.booleanProp) === typeof(def.type()));
+        });
+
+        test('Has correct default value', () => {
+          assert.isTrue(testElement.booleanProp === true);
+        });
+
+        test('Changing property reflects attribute', () => {
+          testElement.booleanProp = false;
+          assert.isTrue(testElement.booleanProp === false);
+          assert.isTrue(testElement.getAttribute('boolean-attr') === null);
+        });
+
+        test('Changing attribute reflects property', () => {
+          testElement.setAttribute('boolean-attr', 'boolean-attr');
+          assert.isTrue(testElement.getAttribute('boolean-attr') === 'boolean-attr');
+          assert.isTrue(testElement.booleanProp === true);
+
+          testElement.removeAttribute('boolean-attr');
+          assert.isTrue(testElement.getAttribute('boolean-attr') === null);
+          assert.isTrue(testElement.booleanProp === false);
         });
       });
     </script>
