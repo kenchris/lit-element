@@ -43,22 +43,22 @@ export class LitElement extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     for (const prop in (this.constructor as any).properties) {
-      const attrName = (this.constructor as any).properties[prop].attrName;
+      const { value, attrName } = (this.constructor as any).properties[prop];
       if (attrName) {
         this._attrMap[attrName] = prop;
+      }
+      if (value !== undefined) {
+        this._values[prop] = value;
       }
     }
   }
 
   static withProperties() {
     for (const prop in this.properties) {
-      const { type: typeFn, value, attrName } = this.properties[prop];
+      const { type: typeFn, attrName } = this.properties[prop];
 
       Object.defineProperty(this.prototype, prop, {
-        get(this: LitElement) {
-          const v = this._values[prop];
-          return (v !== undefined) ? v : value;
-        },
+        get(this: LitElement) { return this._values[prop]; },
         set(this: LitElement, v) {
           const value = typeFn(v);
           this._values[prop] = value;
