@@ -28,15 +28,9 @@ export class LitElement extends HTMLElement {
   }
 
   static get observedAttributes(): string[] {
-    const attrs = [];
-
-    for (const prop in this.properties) {
-      const attrName = this.properties[prop].attrName;
-      if (attrName) {
-        attrs.push(attrName);
-      }
-    }
-    return attrs;
+    return Object.keys(this.properties)
+      .map(key => this.properties[key].attrName)
+      .filter(name => name);
   }
 
   constructor() {
