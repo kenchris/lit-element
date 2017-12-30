@@ -18,24 +18,34 @@
               type: Boolean,
               value: true,
               attrName: "boolean-attr"
+            },
+            objectProp: {
+              type: Object,
+              value: {fruit: 'pineapple'}
+            },
+            arrayProp: {
+              type: Array,
+              value: ['apple']
             }
           }
         }
-      
+
         render() {
           return html`
             <h2>String: ${this.stringProp}</h2>
             <h2>Boolean: ${this.booleanProp}</h2>
+            <h2>Object: ${JSON.stringify(this.objectProp)}</h2>
+            <h2>Array: ${JSON.stringify(this.arrayProp)}</h2>
           `;
         }
-     }
+      }
 
-     customElements.define('test-element', TestElement.withProperties());
+      customElements.define('test-element', TestElement.withProperties());
 
-     const testElement = document.createElement('test-element');
-     document.body.appendChild(testElement);
+      const testElement = document.createElement('test-element');
+      document.body.appendChild(testElement);
 
-     suite('String property', () => {
+      suite('String property', () => {
         const def = TestElement.properties.stringProp;
 
         test('Has correct type', () => {
@@ -86,6 +96,41 @@
           assert.isTrue(testElement.booleanProp === false);
         });
       });
+
+      suite('Object property', () => {
+        const def = TestElement.properties.objectProp;
+
+        test('Has correct type', () => {
+          assert.isTrue(typeof(testElement.objectProp) === typeof(def.type()));
+        });
+
+        test('Has correct default value', () => {
+          assert.isTrue(testElement.objectProp.fruit === 'pineapple');
+        });
+
+        test('Changing property reflects value in getter', () => {
+          testElement.objectProp = {fruit: 'strawberry'};
+          assert.isTrue(testElement.objectProp.fruit === 'strawberry');
+        });
+      });
+
+      suite('Array property', () => {
+        const def = TestElement.properties.arrayProp;
+
+        test('Has correct type', () => {
+          assert.isTrue(typeof(testElement.arrayProp) === typeof(def.type()));
+        });
+
+        test('Has correct default value', () => {
+          assert.isTrue(testElement.arrayProp[0] === 'apple');
+        });
+
+        test('Changing property reflects value in getter', () => {
+          testElement.arrayProp = ['banana', 'cherry'];
+          assert.isTrue(testElement.arrayProp[1] === 'cherry');
+        });
+      });
+
     </script>
   </body>
   </html>

@@ -54,7 +54,7 @@ export class LitElement extends HTMLElement {
       Object.defineProperty(this.prototype, prop, {
         get(this: LitElement) { return this._values[prop]; },
         set(this: LitElement, v) {
-          const value = typeFn(v);
+          const value = typeFn === Array ? v : typeFn(v);
           this._values[prop] = value;
           if (attrName) {
             if (typeFn.name === 'Boolean') {
