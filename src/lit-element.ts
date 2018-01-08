@@ -22,6 +22,7 @@ export class LitElement extends HTMLElement {
   private _lookupCache: ElementCache = [];
   private _values: PropertyValues = [];
   private _attrMap: any = {};
+  private _resolved: boolean = false;
 
   static get properties(): PropertyDeclaration[] {
     return [];
@@ -29,8 +30,8 @@ export class LitElement extends HTMLElement {
 
   static get observedAttributes(): string[] {
     return Object.keys(this.properties)
-      .map(key => this.properties[key].attrName)
-      .filter(name => name);
+      .map((key) => this.properties[key].attrName)
+      .filter((name) => name);
   }
 
   constructor() {
@@ -76,7 +77,28 @@ export class LitElement extends HTMLElement {
   }
 
   renderCallback() {
-    render(this.render(), this.shadowRoot as ShadowRoot);
+    if (this._resolved) {
+      render(this.render(), this.shadowRoot as ShadowRoot);
+    } else {
+      const template = this.render().template;
+      const rootNode = template.element.content;
+      const walker = document.createTreeWalker(rootNode, NodeFilter.SHOW_ELEMENT, null as any, false);
+
+      let deps = new Set();
+      while (walker.nextNode()) {
+        const element = walker.currentNode as Element;
+        if (element.tagName.includes('-')) {
+          deps.add(element.tagName.toLowerCase());
+        }
+      }
+
+      Promise.all(Array.from(deps)
+        .map((tagName) => customElements.whenDefined(tagName)))
+        .then(() => {
+          this._resolved = true;
+          this.renderCallback();
+        });
+    }
   }
 
   render(): TemplateResult {

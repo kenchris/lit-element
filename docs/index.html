@@ -113,4 +113,54 @@
     <super-hello-world></super-hello-world><br>
     <super-hello-world upperkase>¡Hola, mundo!</super-hello-world>
   </code-preview>
+
+  <code-preview title="Dependencies: Elements pending upgrade doesn't shadow properties">
+    <script type="module">
+      import { LitElement, html } from '/node_modules/lit-html-element/lit-element.js';
+      class MyApp extends LitElement {
+        constructor() {
+          super();
+          this.fruit = 'Apple';
+        }
+        change() {
+          this.fruit = this.$('new').value;
+          this.$('new').value = '';
+
+          // This will work as it calls the setter, but only if the
+          // froot attribute in the HTML below is removed.
+          this.shadowRoot.querySelector('my-fruit').froot = this.fruit;
+
+          this.invalidate();
+        }
+        render() {
+          return html`
+            <p>Fruit in parent: ${this.fruit}</p>
+            <my-fruit froot="${this.fruit}"></my-fruit>
+            <input id="new" type="text"/>
+            <button on-click="${() => this.change()}">Change</button
+          `;
+        }
+      }
+      customElements.define('my-app', MyApp.withProperties());
+    </script>
+    <script type="module">
+      import { LitElement, html } from '/node_modules/lit-html-element/lit-element.js';
+      class MyFruit extends LitElement {
+        static get properties() {
+          return {
+            froot: {
+              type: String
+            }
+          }
+        }
+        render() {
+          return html`
+            <p>Fruit in child: ${this.froot}</p>
+          `;
+        }
+      }
+      customElements.define('my-fruit', MyFruit.withProperties());
+    </script>
+    <my-app></my-app>
+  </code-preview>
 </html>
