@@ -32,8 +32,8 @@ export class LitElement extends HTMLElement {
 
   static get observedAttributes(): string[] {
     return Object.keys(this.properties)
-      .map((key) => this.properties[key].attrName)
-      .filter((name) => name);
+      .map(key => this.properties[key].attrName)
+      .filter(name => name);
   }
 
   constructor() {
@@ -51,7 +51,7 @@ export class LitElement extends HTMLElement {
       if (value !== undefined) {
         this[prop] = value;
       }
-      let match = /(\w+)\((.+)\)/.exec(computed);
+      const match = /(\w+)\((.+)\)/.exec(computed);
       if (match) {
         const fnName = match[1];
         const argNames = match[2].split(/,\s*/);
@@ -59,8 +59,8 @@ export class LitElement extends HTMLElement {
         const boundFn = () => this[prop] = this[fnName].call(this, argNames.map(propName => this[propName]));
 
         let hasAtLeastOneValue = false;
-        for (let propName of argNames) {
-          hasAtLeastOneValue = hasAtLeastOneValue || this[propName] != undefined;
+        for (const propName of argNames) {
+          hasAtLeastOneValue = hasAtLeastOneValue || this[propName] !== undefined;
           if (!this._deps[propName]) {
             this._deps[propName] = [ boundFn ];
           } else {
@@ -115,7 +115,7 @@ export class LitElement extends HTMLElement {
       const rootNode = template.element.content;
       const walker = document.createTreeWalker(rootNode, NodeFilter.SHOW_ELEMENT, null as any, false);
 
-      let deps = new Set();
+      const deps = new Set();
       while (walker.nextNode()) {
         const element = walker.currentNode as Element;
         if (element.tagName.includes('-')) {
@@ -124,7 +124,7 @@ export class LitElement extends HTMLElement {
       }
 
       Promise.all(Array.from(deps)
-        .map((tagName) => customElements.whenDefined(tagName)))
+        .map(tagName => customElements.whenDefined(tagName)))
         .then(() => {
           this._resolved = true;
           this.renderCallback();

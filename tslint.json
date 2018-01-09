@@ -1,13 +1,22 @@
 {
     "rules": {
-      "arrow-parens": true,
+      "arrow-parens": [
+        "error",
+        "as-needed"
+      ],
       "class-name": true,
       "indent": [
         true,
         "spaces",
         2
       ],
-      "prefer-const": true,
+      "prefer-const": [
+        "error",
+        {
+          "destructuring": "all",
+          "ignoreReadBeforeAssign": false
+        }
+      ],
       "no-duplicate-variable": true,
       "no-eval": true,
       "no-internal-module": true,
