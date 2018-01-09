@@ -7,7 +7,7 @@ export interface PropertyDeclaration {
   type: (a: any) => any;
   value?: any;
   attrName?: string;
-  compute: string;
+  computed: string;
 }
 
 interface PropertyValues {
@@ -40,7 +40,7 @@ export class LitElement extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     for (const prop in (this.constructor as any).properties) {
-      let { value, attrName, compute } = (this.constructor as any).properties[prop];
+      let { value, attrName, computed } = (this.constructor as any).properties[prop];
       if (attrName) {
         this._attrMap[attrName] = prop;
         const initialValue = this.getAttribute(attrName);
@@ -51,7 +51,7 @@ export class LitElement extends HTMLElement {
       if (value !== undefined) {
         this[prop] = value;
       }
-      let match = /(\w+)\((.+)\)/.exec(compute);
+      let match = /(\w+)\((.+)\)/.exec(computed);
       if (match) {
         const fnName = match[1];
         const argNames = match[2].split(/,\s*/);
