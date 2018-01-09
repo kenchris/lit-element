@@ -1,6 +1,6 @@
 <script type="module">
   import { LitElement, html } from '/node_modules/lit-html-element/lit-element.js';
-  
+
   class CodePreview extends LitElement {
     static get properties() {
       return {
@@ -53,14 +53,14 @@
   <code-preview title="Querying element using id">
     <script type="module">
       import { LitElement, html } from '/node_modules/lit-html-element/lit-element.js';
-      
+
       class ColorMarker extends LitElement {
         changeColor() {
           const color = Math.random().toString(16).substr(2, 6);
           // Easily query the element by id:
           this.$("wrapper").style.backgroundColor = `#${color}`;
         }
-    
+
         render() {
           return html`
             <style>
@@ -94,12 +94,12 @@
             }
           }
         }
-        
+
         render() {
           return html`
             <style>
               .uppercase {
-                text-transform: uppercase;          
+                text-transform: uppercase;
               }
             </style>
             <div class$="${this.uppercase ? 'uppercase' : ''}">
@@ -163,4 +163,53 @@
     </script>
     <my-app></my-app>
   </code-preview>
+
+  <code-preview title="Computed properties">
+      <script type="module">
+        import { LitElement, html } from '/node_modules/lit-html-element/lit-element.js';
+
+        class ComputedWorld extends LitElement {
+          static get properties() {
+            return {
+              firstName: {
+                type: String,
+                attrName: "first-name"
+              },
+              doubleMessage: {
+                type: String,
+                compute: 'computeDoubleMessage(message)'
+              },
+              message: {
+                type: String,
+                compute: 'computeMessage(firstName)',
+                value: 'Hej Verden'
+              }
+            }
+          }
+          computeDoubleMessage(message) {
+            return message + " " + message;
+          }
+          computeMessage(firstName) {
+            return `Konichiwa ${firstName}`;
+          }
+          render() {
+            return html`
+              <div style="font-weight: bold">${this.doubleMessage}</div>
+            `;
+          }
+        }
+        customElements.define('computed-world', ComputedWorld.withProperties())
+      </script>
+      <computed-world></computed-world>
+      <computed-world first-name="Kenneth"></computed-world>
+      <computed-world id="ninja"></computed-world>
+      <script>
+        Promise.all([
+          new Promise(resolve => setTimeout(resolve, 2000)),
+          customElements.whenDefined('computed-world')
+        ]).then(() => {
+          document.getElementById('ninja').firstName = "Ninja";
+        });
+      </script>
+    </code-preview>
 </html>
