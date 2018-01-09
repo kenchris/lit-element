@@ -7,6 +7,7 @@ export interface PropertyDeclaration {
   type: (a: any) => any;
   value?: any;
   attrName?: string;
+  compute: string;
 }
 
 interface PropertyValues {
@@ -22,6 +23,7 @@ export class LitElement extends HTMLElement {
   private _lookupCache: ElementCache = [];
   private _values: PropertyValues = [];
   private _attrMap: any = {};
+  private _deps: any = {};
   private _resolved: boolean = false;
 
   static get properties(): PropertyDeclaration[] {
@@ -38,12 +40,36 @@ export class LitElement extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
     for (const prop in (this.constructor as any).properties) {
-      const { value, attrName } = (this.constructor as any).properties[prop];
+      let { value, attrName, compute } = (this.constructor as any).properties[prop];
       if (attrName) {
         this._attrMap[attrName] = prop;
+        const initialValue = this.getAttribute(attrName);
+        if (initialValue) {
+          value = initialValue;
+        }
       }
       if (value !== undefined) {
-        this._values[prop] = value;
+        this[prop] = value;
+      }
+      let match = /(\w+)\((.+)\)/.exec(compute);
+      if (match) {
+        const fnName = match[1];
+        const argNames = match[2].split(/,\s*/);
+
+        const boundFn = () => this[prop] = this[fnName].call(this, argNames.map(propName => this[propName]));
+
+        let hasAtLeastOneValue = false;
+        for (let propName of argNames) {
+          hasAtLeastOneValue = hasAtLeastOneValue || this[propName] != undefined;
+          if (!this._deps[propName]) {
+            this._deps[propName] = [ boundFn ];
+          } else {
+            this._deps[propName].push(boundFn);
+          }
+        }
+        if (hasAtLeastOneValue) {
+          boundFn();
+        }
       }
     }
   }
@@ -57,6 +83,11 @@ export class LitElement extends HTMLElement {
         set(this: LitElement, v) {
           const value = typeFn === Array ? v : typeFn(v);
           this._values[prop] = value;
+
+          if (this._deps[prop]) {
+            this._deps[prop].map(fn => fn());
+          }
+
           if (attrName) {
             if (typeFn.name === 'Boolean') {
               if (!value) {
