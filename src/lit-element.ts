@@ -32,7 +32,7 @@ export class LitElement extends HTMLElement {
 
   static get observedAttributes(): string[] {
     return Object.keys(this.properties)
-      .map(key => this.properties[key].attrName)
+      .map(key => (<any>this.properties)[key].attrName)
       .filter(name => name);
   }
 
@@ -49,18 +49,18 @@ export class LitElement extends HTMLElement {
         }
       }
       if (value !== undefined) {
-        this[prop] = value;
+        (<any>this)[prop] = value;
       }
       const match = /(\w+)\((.+)\)/.exec(computed);
       if (match) {
         const fnName = match[1];
         const argNames = match[2].split(/,\s*/);
 
-        const boundFn = () => this[prop] = this[fnName].call(this, argNames.map(propName => this[propName]));
+        const boundFn = () => (<any>this)[prop] = (<any>this)[fnName].call(this, argNames.map(propName => (<any>this)[propName]));
 
         let hasAtLeastOneValue = false;
         for (const propName of argNames) {
-          hasAtLeastOneValue = hasAtLeastOneValue || this[propName] !== undefined;
+          hasAtLeastOneValue = hasAtLeastOneValue || (<any>this)[propName] !== undefined;
           if (!this._deps[propName]) {
             this._deps[propName] = [ boundFn ];
           } else {
@@ -85,7 +85,7 @@ export class LitElement extends HTMLElement {
           this._values[prop] = value;
 
           if (this._deps[prop]) {
-            this._deps[prop].map(fn => fn());
+            this._deps[prop].map((fn:Function) => fn());
           }
 
           if (attrName) {
