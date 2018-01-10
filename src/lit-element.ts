@@ -53,7 +53,7 @@ export class LitElement extends HTMLElement {
       // Only property defined 'computes' are handled of form 'firstName(name, surname)',
       // with at least one dependency argument.
       const match = /(\w+)\((.+)\)/.exec(computed);
-      if (match) {
+      if (!attrName && match) {
         const fnName = match[1];
         const argNames = match[2].split(/,\s*/);
 
