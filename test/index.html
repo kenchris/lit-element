@@ -238,8 +238,15 @@
             assert.isTrue(initialValueWithAttr.prop3 === true);
             assert.isTrue(typeof(initialValueWithAttr.prop3) === typeof(Boolean()));
           });
-
         });
+
+        // Test that 'computed:' works for 1 argument and updates
+        // Test that 'computed:' works for multiple arguments, and updates when any value update
+        // Test that 'computed:' results in invalidate
+        // Test that 'computed:' can depend on another computed value, and updates
+        // Test that 'computed:' will use initial 'value:' from other computed value if dependencies are not met at first
+        // Test that 'computed:' will use initial 'value:' if none of the dependencies are set
+        // Test that 'computed:' doesn't reflect to attributes
       }
 
       run();
