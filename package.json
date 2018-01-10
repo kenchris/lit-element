@@ -36,6 +36,11 @@
     "tslint": "^5.7.0",
     "typescript": "^2.4.1",
     "uglify-es": "^3.0.27",
+    "@types/chai": "^4.0.1",
+    "@types/mocha": "^2.2.41",
+    "chai": "^4.0.2",
+    "mocha": "^3.4.2",
+    "wct-browser-legacy": "^0.0.1-pre.10",
     "web-component-tester": "^6.3.0"
   }
 }

@@ -39,18 +39,19 @@ export class LitElement extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+
     for (const prop in (this.constructor as any).properties) {
-      let { value, attrName, computed } = (this.constructor as any).properties[prop];
-      if (attrName) {
+      const { value, attrName, computed } = (this.constructor as any).properties[prop];
+      // We can only handle properly defined attributes.
+      if (typeof(attrName) === 'string' && attrName.length) {
         this._attrMap[attrName] = prop;
-        const initialValue = this.getAttribute(attrName);
-        if (initialValue) {
-          value = initialValue;
-        }
       }
-      if (value !== undefined) {
+      // Properties backed by attributes have default values set from attributes, not 'value'.
+      if (!attrName && value !== undefined) {
         (<any>this)[prop] = value;
       }
+      // Only property defined 'computes' are handled of form 'firstName(name, surname)',
+      // with at least one dependency argument.
       const match = /(\w+)\((.+)\)/.exec(computed);
       if (match) {
         const fnName = match[1];
@@ -85,7 +86,7 @@ export class LitElement extends HTMLElement {
           this._values[prop] = value;
 
           if (this._deps[prop]) {
-            this._deps[prop].map((fn:Function) => fn());
+            this._deps[prop].map((fn: Function) => fn());
           }
 
           if (attrName) {
