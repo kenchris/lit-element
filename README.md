@@ -24,20 +24,20 @@ Demos can be found [here](https://kenchris.github.io/lit-element/).
 
 Simple write your HTML code using ```lit-html``` by creating a ```render()``` method.
 
-```javascript 
+```javascript
 import { LitElement, html } from '/src/lit-element.js';
 
-  class HelloWorld extends LitElement {
-    render() {
-      return html`
-        <div style="font-weight: bold">Hello World</div>
-      `;
-    }
+class HelloWorld extends LitElement {
+  render() {
+    return html`
+      <div style="font-weight: bold">Hello World</div>
+    `;
   }
-  customElements.define('hello-world', HelloWorld)
+}
+customElements.define('hello-world', HelloWorld)
 ```
 ```html
-  <hello-world></hello-world>
+<hello-world></hello-world>
 ```
 
 ### Example: Querying elements by `id`
@@ -46,32 +46,32 @@ After contents has been rendered the first time (ie. after ```connectedCallback(
 
 In the below example, we call ```this.changeColor()``` whenever the button is pressed, which in result accesses the div using ```this.$("wrapper")``` and modifies its background color.
 
-```javascript 
-  class ColorMarker extends LitElement {
-    changeColor() {
-      const color = Math.random().toString(16).substr(2, 6);
-      // Easily query the element by id:
-      this.$("wrapper").style.backgroundColor = `#${color}`;
-    }
-
-    render() {
-      return html`
-        <style>
-          div {
-            background-color: yellow;
-          }
-        </style>
-        <button on-click=${() => this.changeColor()}>
-          Change background color
-        </button>
-        <div id="wrapper"><slot></slot></div>
-      `;
-    }
+```javascript
+class ColorMarker extends LitElement {
+  changeColor() {
+    const color = Math.random().toString(16).substr(2, 6);
+    // Easily query the element by id:
+    this.$("wrapper").style.backgroundColor = `#${color}`;
   }
-  customElements.define('color-marker', ColorMarker);
+
+  render() {
+    return html`
+      <style>
+        div {
+          background-color: yellow;
+        }
+      </style>
+      <button on-click=${() => this.changeColor()}>
+        Change background color
+      </button>
+      <div id="wrapper"><slot></slot></div>
+    `;
+  }
+}
+customElements.define('color-marker', ColorMarker);
 ```
 ```html
-  <color-marker>Horse</color-marker>
+<color-marker>Horse</color-marker>
 ```
 
 ### Example: using properties
@@ -82,39 +82,62 @@ Properties can have default values and can even be reflected via attributes (cha
 
 NOTE, when using properties, you MUST call ```this.withProperties``` before using the elements. As the method returns the class itself, this can be done as part of ```customElements.define(...)```
 
-NOTE, attributes default values are set from the element attributes themselves (present or missing) and thus default values set via 'value' are ignored.  
+NOTE, attributes default values are set from the element attributes themselves (present or missing) and thus default values set via 'value' are ignored.
 
-```javascript 
+```javascript
 import { LitElement, html } from '/src/lit-element.js';
 
-  class HelloWorld extends LitElement {
-    static get properties() {
-      return {
-        uppercase: {
-          type: Boolean,
-          attrName: "uppercase"
-        }
+class HelloWorld extends LitElement {
+  static get properties() {
+    return {
+      uppercase: {
+        type: Boolean,
+        attrName: "uppercase"
       }
     }
-    
-    render() {
-      return html`
-        <style>
-          .uppercase {
-            text-transform: uppercase;          
-          }
-        </style>
-        <div id="box" class$="${this.uppercase ? 'uppercase' : ''}">
-          <slot>Hello World</slot>
-        </div>
-      `;
-    }
   }
-  customElements.define('hello-world', HelloWorld.withProperties());
+
+  render() {
+    return html`
+      <style>
+        .uppercase {
+          text-transform: uppercase;
+        }
+      </style>
+      <div id="box" class$="${this.uppercase ? 'uppercase' : ''}">
+        <slot>Hello World</slot>
+      </div>
+    `;
+  }
+}
+customElements.define('hello-world', HelloWorld.withProperties());
 ```
 ```html
-   <hello-world></hello-world>
-   <hello-world uppercase>¡Hola, mundo!</hello-world>
+<hello-world></hello-world>
+<hello-world uppercase>¡Hola, mundo!</hello-world>
+```
+
+## Warning about element upgrading
+
+Custom elements need to be upgraded before they work. This happens automatically by the browser when it has all the resources it needs.
+
+This mean that if you do a custom element which depends on other custom elements and use properties for data flow, then setting those properties before the element is upgraded, mean that you will end up shadowing the lit-html-element properties, meaning that the property updates and attribute reflection won't work.
+
+There is a work around for this in lit-html-element which works by first rendering when all dependencies are present, so you don't need to worryabout setting properties using ``` html`...` ``` inside elements built
+using ```LitElement```.
+
+But you might still manage to shadow properties if you manual set values before upgraded like
+
+```javascript
+document.getElementById('ninja').firstName = "Ninja";
+```
+
+So guard these the following way:
+
+```javascript
+customElements.whenDefined('computed-world').then(() => {
+  document.getElementById('ninja').firstName = "Ninja";
+});
 ```
 
 ## Advanced
@@ -131,50 +154,48 @@ If you need to do extra work before rendering, like setting a property based on 
 
 ### Computed properties
 
-If you need some properties that are calculated and updates depending on other
-properties, that is possible using the 'computed' value, which defined an object
-method with arguments as a string.
+If you need some properties that are calculated and updates depending on other properties, that is possible using the 'computed' value, which defined an object method with arguments as a string.
 
 NOTE, computed properties can not be reflected to attributes.
 
 Eg.
 
-```javascript 
-  import { LitElement, html } from '/node_modules/lit-html-element/lit-element.js';
+```javascript
+import { LitElement, html } from '/node_modules/lit-html-element/lit-element.js';
 
-  class ComputedWorld extends LitElement {
-    static get properties() {
-      return {
-        firstName: {
-          type: String,
-          attrName: "first-name"
-        },
-        doubleMessage: {
-          type: String,
-          computed: 'computeDoubleMessage(message)'
-        },
-        message: {
-          type: String,
-          computed: 'computeMessage(firstName)',
-          value: 'Hej Verden'
-        }
+class ComputedWorld extends LitElement {
+  static get properties() {
+    return {
+      firstName: {
+        type: String,
+        attrName: "first-name"
+      },
+      doubleMessage: {
+        type: String,
+        computed: 'computeDoubleMessage(message)'
+      },
+      message: {
+        type: String,
+        computed: 'computeMessage(firstName)',
+        value: 'Hej Verden'
       }
     }
-    computeDoubleMessage(message) {
-      return message + " " + message;
-    }
-    computeMessage(firstName) {
-      return `Konichiwa ${firstName}`;
-    }
-    render() {
-      return html`
-        <div style="font-weight: bold">${this.doubleMessage}</div>
-      `;
-    }
   }
-  customElements.define('computed-world', ComputedWorld.withProperties())
+  computeDoubleMessage(message) {
+    return message + " " + message;
+  }
+  computeMessage(firstName) {
+    return `Konichiwa ${firstName}`;
+  }
+  render() {
+    return html`
+      <div style="font-weight: bold">${this.doubleMessage}</div>
+    `;
+  }
+}
+customElements.define('computed-world', ComputedWorld.withProperties())
 ```
 ```html
-  <computed-world></computed-world>
-  <computed-world first-name="Kenneth"></computed-world>
+<computed-world></computed-world>
+<computed-world first-name="Kenneth"></computed-world>
 ```
