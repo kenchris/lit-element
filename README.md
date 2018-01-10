@@ -82,6 +82,8 @@ Properties can have default values and can even be reflected via attributes (cha
 
 NOTE, when using properties, you MUST call ```this.withProperties``` before using the elements. As the method returns the class itself, this can be done as part of ```customElements.define(...)```
 
+NOTE, attributes default values are set from the element attributes themselves (present or missing) and thus default values set via 'value' are ignored.  
+
 ```javascript 
 import { LitElement, html } from '/src/lit-element.js';
 
@@ -90,7 +92,6 @@ import { LitElement, html } from '/src/lit-element.js';
       return {
         uppercase: {
           type: Boolean,
-          value: false,
           attrName: "uppercase"
         }
       }
@@ -118,8 +119,62 @@ import { LitElement, html } from '/src/lit-element.js';
 
 ## Advanced
 
+### Automatical re-rendering
+
 When any of the properties in ```properties()``` change, `lit-element` will automatically re-render. The same goes for attributes which are mapped to properties via ```attrName```.
 
 If you need to re-render manually, you can trigger a re-render via a call to ```invalidate()```. This will schedule a microtask which will render the content just before next ```requestAnimationFrame```.
 
+### Custom hooks before and after rendering
+
 If you need to do extra work before rendering, like setting a property based on another property, a subclass can override ```renderCallback()``` to do work before or after the base class calls ```render()```, including setting the dependent property before ```render()```.
+
+### Computed properties
+
+If you need some properties that are calculated and updates depending on other
+properties, that is possible using the 'computed' value, which defined an object
+method with arguments as a string.
+
+NOTE, computed properties can not be reflected to attributes.
+
+Eg.
+
+```javascript 
+  import { LitElement, html } from '/node_modules/lit-html-element/lit-element.js';
+
+  class ComputedWorld extends LitElement {
+    static get properties() {
+      return {
+        firstName: {
+          type: String,
+          attrName: "first-name"
+        },
+        doubleMessage: {
+          type: String,
+          computed: 'computeDoubleMessage(message)'
+        },
+        message: {
+          type: String,
+          computed: 'computeMessage(firstName)',
+          value: 'Hej Verden'
+        }
+      }
+    }
+    computeDoubleMessage(message) {
+      return message + " " + message;
+    }
+    computeMessage(firstName) {
+      return `Konichiwa ${firstName}`;
+    }
+    render() {
+      return html`
+        <div style="font-weight: bold">${this.doubleMessage}</div>
+      `;
+    }
+  }
+  customElements.define('computed-world', ComputedWorld.withProperties())
+```
+```html
+  <computed-world></computed-world>
+  <computed-world first-name="Kenneth"></computed-world>
+```
