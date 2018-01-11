@@ -77,6 +77,31 @@
       }
       customElements.define('initial-value', InitialValue.withProperties());
 
+      class RenderShorthand extends LitElement {
+        static get properties() {
+          return {
+            greeting: {
+              type: String,
+              value: "Hello"
+            },
+
+            target: {
+              type: String,
+              value: "World"
+            },
+          }
+        }
+
+        render({ greeting, target, punctuation = "!" }) {
+          return html`${greeting} ${target}${punctuation}`;
+        }
+
+        get textContent() {
+          return this.shadowRoot.textContent;
+        }
+      }
+      customElements.define('render-shorthand', RenderShorthand.withProperties());
+
       async function run() {
         await customElements.whenDefined('test-element');
 
@@ -190,6 +215,17 @@
           test('Changing property reflects value in getter', () => {
             testElement.arrayProp = ['banana', 'cherry'];
             assert.isTrue(testElement.arrayProp[1] === 'cherry');
+          });
+        });
+
+        await customElements.whenDefined('render-shorthand');
+
+        const renderShorthand = document.createElement('render-shorthand');
+        document.body.appendChild(renderShorthand);
+
+        suite('render shorthand', () => {
+          test('render shorthand works', () => {
+            assert.isTrue(renderShorthand.textContent === "Hello World!");
           });
         });
 

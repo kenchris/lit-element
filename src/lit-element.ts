@@ -110,9 +110,9 @@ export class LitElement extends HTMLElement {
 
   renderCallback() {
     if (this._resolved) {
-      render(this.render(), this.shadowRoot as ShadowRoot);
+      render(this.render(this), this.shadowRoot as ShadowRoot);
     } else {
-      const template = this.render().template;
+      const template = this.render(this).template;
       const rootNode = template.element.content;
       const walker = document.createTreeWalker(rootNode, NodeFilter.SHOW_ELEMENT, null as any, false);
 
@@ -133,7 +133,8 @@ export class LitElement extends HTMLElement {
     }
   }
 
-  render(): TemplateResult {
+  // @ts-ignore
+  render(self: any): TemplateResult {
     return html``;
   }
 
