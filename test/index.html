@@ -102,7 +102,105 @@
       }
       customElements.define('render-shorthand', RenderShorthand.withProperties());
 
+      class ComputedWorld extends LitElement {
+        static get properties() {
+          return {
+            firstName: {
+              type: String,
+              attrName: "first-name"
+            },
+            lastName: {
+              type: String,
+              value: "Christiansen"
+            },
+            name: {
+              type: String,
+              computed: 'computeName(firstName, lastName)'
+            },
+            doubleMessage: {
+              type: String,
+              computed: 'computeDoubleMessage(message)'
+            },
+            message: {
+              type: String,
+              computed: 'computeMessage(firstName)',
+            }
+          }
+        }
+        computeName(firstName, lastName) {
+          return `${firstName ? firstName : ''}${firstName && lastName ? ' ' : ''}${lastName ? lastName : ''}`
+        }
+        computeDoubleMessage(message) {
+          return message + " " + message;
+        }
+        computeMessage(firstName) {
+          return `Hello ${firstName ? firstName : "Rabbit"}`;
+        }
+        render() {
+          return html`
+            <div style="font-weight: bold">${this.doubleMessage}</div>
+          `;
+        }
+      }
+      customElements.define('computed-world', ComputedWorld.withProperties());
+
       async function run() {
+        await customElements.whenDefined('computed-world');
+
+        // Test that 'computed:' works for multiple arguments, and updates when any value update
+        // Test that 'computed:' results in invalidate
+        // Test that 'computed:' can depend on another computed value, and updates
+        // Test that 'computed:' will use initial 'value:' from other computed value if dependencies are not met at first
+        // Test that 'computed:' will use initial 'value:' if none of the dependencies are set
+        // Test that 'computed:' doesn't reflect to attributes
+
+        suite('computed properties', () => {
+          test('Test that computed works for 1 argument and updates', () => {
+            const computedWorld = document.createElement('computed-world');
+            document.body.appendChild(computedWorld);
+
+            assert.isTrue(computedWorld.firstName === null);
+            assert.isTrue(computedWorld.message === "Hello Rabbit");
+
+            computedWorld.firstName = "Kenneth";
+
+            assert.isTrue(computedWorld.getAttribute("first-name") === "Kenneth");
+            assert.isTrue(computedWorld.firstName === "Kenneth");
+            assert.isTrue(computedWorld.message === "Hello Kenneth");
+
+            computedWorld.removeAttribute("first-name");
+
+            assert.isTrue(computedWorld.getAttribute("first-name") === null);
+            assert.isTrue(computedWorld.firstName === null);
+
+            assert.isTrue(computedWorld.message === "Hello Rabbit");
+
+            document.body.removeChild(computedWorld);
+          });
+
+          test('Test that computed works for multiple arguments and updates', () => {
+            const computedWorld = document.createElement('computed-world');
+            document.body.appendChild(computedWorld);
+
+            assert.isTrue(computedWorld.firstName === null); // no attr set
+            assert.isTrue(computedWorld.lastName === "Christiansen"); // value set
+            assert.isTrue(computedWorld.name === "Christiansen");
+
+            computedWorld.firstName = "Kenneth";
+
+            assert.isTrue(computedWorld.name === "Kenneth Christiansen");
+
+            computedWorld.removeAttribute("first-name");
+
+            assert.isTrue(computedWorld.getAttribute("first-name") === null);
+            assert.isTrue(computedWorld.firstName === null);
+
+            assert.isTrue(computedWorld.name === "Christiansen");
+
+            document.body.removeChild(computedWorld);
+          });
+        });
+
         await customElements.whenDefined('test-element');
 
         const testElement = document.createElement('test-element');
@@ -124,7 +222,9 @@
           const def = TestElement.properties.stringAttr;
 
           test('Ignores default value', () => {
-            assert.isTrue(testElement.stringAttr === undefined);
+            // Missing attribute for non-boolean is null.
+            // Default value is set to 'Example'
+            assert.isTrue(testElement.stringAttr === null);
           });
 
           test('Changing property reflects attribute', () => {
@@ -160,7 +260,9 @@
           const def = TestElement.properties.booleanAttr;
 
           test('Ignores default value', () => {
-            assert.isTrue(testElement.booleanAttr === undefined);
+            // Missing attribute for boolean is false.
+            // Default value is set to true.
+            assert.isTrue(testElement.booleanAttr === false);
           });
 
           test('Changing property reflects attribute', () => {
@@ -244,7 +346,7 @@
           });
 
           test('initial missing attribute is set during initialization', () => {
-            assert.isTrue(initialValue.prop2 === undefined);
+            assert.isTrue(initialValue.prop2 === null);
           });
 
           test('initial (string) attribute is set during initialization', () => {
@@ -275,14 +377,6 @@
             assert.isTrue(typeof(initialValueWithAttr.prop3) === typeof(Boolean()));
           });
         });
-
-        // Test that 'computed:' works for 1 argument and updates
-        // Test that 'computed:' works for multiple arguments, and updates when any value update
-        // Test that 'computed:' results in invalidate
-        // Test that 'computed:' can depend on another computed value, and updates
-        // Test that 'computed:' will use initial 'value:' from other computed value if dependencies are not met at first
-        // Test that 'computed:' will use initial 'value:' if none of the dependencies are set
-        // Test that 'computed:' doesn't reflect to attributes
       }
 
       run();

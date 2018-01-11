@@ -117,6 +117,22 @@ customElements.define('hello-world', HelloWorld.withProperties());
 <hello-world uppercase>¡Hola, mundo!</hello-world>
 ```
 
+## Attribute reflection
+
+The presence of attributes or not results in actual values, ie. a missing boolean attribute is considered false and all other attributes are considered null. This means that when mapping properties to attributes, there is no such thing as a default value as values are always defined depending on the presence of attributes or not. This means that setting 'value' is ignored when 'attrName' is present.
+
+Values are converted using their type constructors, ie String(attributeValue) for String, Number(attributeValue) for Number, etc.
+
+Boolean has special handling in order to follow the patterns of the Web Platform.
+
+From the HTML standard:
+
+> The presence of a boolean attribute on an element represents the true value, and the absence of the attribute represents the false value.
+>
+> If the attribute is present, its value must either be the empty string or a value that is an ASCII case-insensitive match for the attribute's canonical name, with no leading or trailing whitespace.
+
+```Array``` and ```Object``` are disencouraged for attributes and have no special handling, thus values are converted using their constructors as any other value types, except boolean.
+
 ## Warning about element upgrading
 
 Custom elements need to be upgraded before they work. This happens automatically by the browser when it has all the resources it needs.

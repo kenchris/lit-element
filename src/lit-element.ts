@@ -26,6 +26,26 @@ export class LitElement extends HTMLElement {
   private _deps: any = {};
   private _resolved: boolean = false;
 
+  _setPropertyValue(propertyName: string, newValue: any) {
+    this._values[propertyName] = newValue;
+    if (this._deps[propertyName]) {
+      this._deps[propertyName].map((fn: Function) => fn());
+    }
+  }
+
+  _setPropertyValueFromAttributeValue(attrName: string, newValue: any) {
+    const propertyName = this._attrMap[attrName];
+    const { type: typeFn } = (this.constructor as any).properties[propertyName];
+
+    let value;
+    if (typeFn.name === 'Boolean') {
+      value = (newValue === '') || (newValue.toLowerCase() === attrName.toLowerCase());
+    } else {
+      value = (newValue !== null) ? typeFn(newValue) : null;
+    }
+    this._setPropertyValue(propertyName, value);
+  }
+
   static get properties(): PropertyDeclaration[] {
     return [];
   }
@@ -40,15 +60,15 @@ export class LitElement extends HTMLElement {
     super();
     this.attachShadow({ mode: 'open' });
 
-    for (const prop in (this.constructor as any).properties) {
-      const { value, attrName, computed } = (this.constructor as any).properties[prop];
+    for (const propertyName in (this.constructor as any).properties) {
+      const { value, attrName, computed } = (this.constructor as any).properties[propertyName];
       // We can only handle properly defined attributes.
       if (typeof(attrName) === 'string' && attrName.length) {
-        this._attrMap[attrName] = prop;
+        this._attrMap[attrName] = propertyName;
       }
       // Properties backed by attributes have default values set from attributes, not 'value'.
       if (!attrName && value !== undefined) {
-        (<any>this)[prop] = value;
+        (<any>this)[propertyName] = value;
       }
       // Only property defined 'computes' are handled of form 'firstName(name, surname)',
       // with at least one dependency argument.
@@ -57,15 +77,15 @@ export class LitElement extends HTMLElement {
         const fnName = match[1];
         const argNames = match[2].split(/,\s*/);
 
-        const boundFn = () => (<any>this)[prop] = (<any>this)[fnName].call(this, argNames.map(propName => (<any>this)[propName]));
+        const boundFn = () => (<any>this)[propertyName] = (<any>this)[fnName].apply(this, argNames.map(argName => (<any>this)[argName]));
 
         let hasAtLeastOneValue = false;
-        for (const propName of argNames) {
-          hasAtLeastOneValue = hasAtLeastOneValue || (<any>this)[propName] !== undefined;
-          if (!this._deps[propName]) {
-            this._deps[propName] = [ boundFn ];
+        for (const argName of argNames) {
+          hasAtLeastOneValue = hasAtLeastOneValue || (<any>this)[argName] !== undefined;
+          if (!this._deps[argName]) {
+            this._deps[argName] = [ boundFn ];
           } else {
-            this._deps[propName].push(boundFn);
+            this._deps[argName].push(boundFn);
           }
         }
         if (hasAtLeastOneValue) {
@@ -76,18 +96,14 @@ export class LitElement extends HTMLElement {
   }
 
   static withProperties() {
-    for (const prop in this.properties) {
-      const { type: typeFn, attrName } = this.properties[prop];
+    for (const propertyName in this.properties) {
+      const { type: typeFn, attrName } = this.properties[propertyName];
 
-      Object.defineProperty(this.prototype, prop, {
-        get(this: LitElement) { return this._values[prop]; },
+      Object.defineProperty(this.prototype, propertyName, {
+        get(this: LitElement) { return this._values[propertyName]; },
         set(this: LitElement, v) {
           const value = typeFn === Array ? v : typeFn(v);
-          this._values[prop] = value;
-
-          if (this._deps[prop]) {
-            this._deps[prop].map((fn: Function) => fn());
-          }
+          this._setPropertyValue(propertyName, value);
 
           if (attrName) {
             if (typeFn.name === 'Boolean') {
@@ -139,19 +155,15 @@ export class LitElement extends HTMLElement {
   }
 
   attributeChangedCallback(attrName: string, _oldValue: string, newValue: string) {
-    const prop = this._attrMap[attrName];
-    const { type: typeFn } = (this.constructor as any).properties[prop];
-
-    if (typeFn.name === 'Boolean') {
-      this._values[prop] = (newValue === '') || (newValue === attrName);
-    } else {
-      this._values[prop] = typeFn(newValue);
-    }
-
+    this._setPropertyValueFromAttributeValue(attrName, newValue);
     this.invalidate();
   }
 
   connectedCallback() {
+    for (const attrName of (this.constructor as any).observedAttributes) {
+      this._setPropertyValueFromAttributeValue(attrName, this.getAttribute(attrName));
+    }
+
     this.invalidate();
   }
 
