@@ -119,11 +119,11 @@ customElements.define('hello-world', HelloWorld.withProperties());
 
 ## Attribute reflection
 
-The presence of attributes or not results in actual values, ie. a missing boolean attribute is considered false and all other attributes are considered null. This means that when mapping properties to attributes, there is no such thing as a default value as values are always defined depending on the presence of attributes or not. This means that setting 'value' is ignored when 'attrName' is present.
+The presence of attributes or not results in actual values, ie. a missing boolean attribute is considered false and all other attributes are considered ```null```. This means that when mapping properties to attributes, there is no such thing as a default value as values are always defined depending on the presence of attributes or not. This means that setting ```value:``` is ignored when ```attrName:``` is present.
 
-Values are converted using their type constructors, ie String(attributeValue) for String, Number(attributeValue) for Number, etc.
+Values are converted using their type constructors, ie ```String(attributeValue)``` for ```String```, ```Number(attributeValue)``` for ```Number```, etc.
 
-Boolean has special handling in order to follow the patterns of the Web Platform.
+```Boolean``` has special handling in order to follow the patterns of the Web Platform.
 
 From the HTML standard:
 
@@ -133,13 +133,35 @@ From the HTML standard:
 
 ```Array``` and ```Object``` are disencouraged for attributes and have no special handling, thus values are converted using their constructors as any other value types, except boolean.
 
+## Access element properties and methods from destructoring
+
+```this``` is passed to render() for you, which is cleaner. particularly when destructuring. You can still reference them manually, though.
+
+```javascript
+class RenderShorthand extends LitElement {
+  static get properties() {
+    return {
+      greeting: {
+        type: String,
+        value: "Hello"
+      }
+    }
+  }
+
+  render({ greeting }) {
+    return html`${greeting} World!`;
+  }
+}
+customElements.define('render-shorthand', RenderShorthand.withProperties());
+```
+
 ## Warning about element upgrading
 
 Custom elements need to be upgraded before they work. This happens automatically by the browser when it has all the resources it needs.
 
-This mean that if you do a custom element which depends on other custom elements and use properties for data flow, then setting those properties before the element is upgraded, mean that you will end up shadowing the lit-html-element properties, meaning that the property updates and attribute reflection won't work.
+This mean that if you do a custom element which depends on other custom elements and use properties for data flow, then setting those properties before the element is upgraded, mean that you will end up shadowing the ```lit-html-element``` properties, meaning that the property updates and attribute reflection won't work.
 
-There is a work around for this in lit-html-element which works by first rendering when all dependencies are present, so you don't need to worryabout setting properties using ``` html`...` ``` inside elements built
+There is a work around for this in ```lit-html-element``` which works by first rendering when all dependencies are present, so you don't need to worryabout setting properties using ``` html`...` ``` inside elements built
 using ```LitElement```.
 
 But you might still manage to shadow properties if you manual set values before upgraded like
