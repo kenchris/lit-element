@@ -7,14 +7,24 @@ A base class for creating web components using [lit-html](https://travis-ci.org/
 
 `lit-element` lets you create web components with [HTML templates](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/template) expressed with JavaScript [template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals), and efficiently render and _re-render_ those templates to DOM.
 
-`lit-element` accomplishes this by integrating [lit-html](https://travis-ci.org/PolymerLabs/lit-html) and has the following features:
-
-* DOM updates are batched and rendered asynchronously
+`lit-element` accomplishes this by integrating [lit-html](https://github.com/PolymerLabs/lit-html) and has the following features:
+* Depends on ES modules and Web Components (polyfills can also be used)
+* Quite small (around 1kB compressed), with only a dependency on [lit-html](https://github.com/PolymerLabs/lit-html)
+* Good test coverage
+* Easy rendering by implementing ```render()``` methods
+  * DOM updates are batched and rendered asynchronously
+  * Pre/post render hooks possible via ```renderCallback```
+  * Manually trigger re-rendering by calling ```invalidate()```
+  * Access properties and methods using ```this``` or destructoring
+* Allows defining properties with additional powers
+  * Content is invalidated as properties change
+  * Properties can define types used for conversion
+  * Properties can have default values
+  * Properties/attributes can auto-reflect
+    * Mapping name is up to user, no automatical case-conversion happens
+    * Default values of auto-reflected properties depend on presence of attributes
+  * Properties can be automatically calculated from other properties
 * Easy querying of element by `id` in the shadow root using `this.$(...)`
-* Allows defining properties which should invalidate the content when changed
-* Properties can have default values
-* Properties can be reflected with any attribute you define
-* Depends on ES modules
 
 ### Demos
 
