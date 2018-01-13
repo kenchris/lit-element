@@ -39,7 +39,7 @@ export class LitElement extends HTMLElement {
 
     let value;
     if (typeFn.name === 'Boolean') {
-      value = (newValue === '') || (newValue.toLowerCase() === attrName.toLowerCase());
+      value = (newValue === '') || (!!newValue && newValue === attrName.toLowerCase());
     } else {
       value = (newValue !== null) ? typeFn(newValue) : null;
     }
