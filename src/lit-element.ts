@@ -2,28 +2,31 @@ import { html, render } from '../node_modules/lit-html/lib/lit-extended.js';
 import { TemplateResult } from '../node_modules/lit-html/lit-html.js';
 
 export { html } from '../node_modules/lit-html/lib/lit-extended.js';
+export { TemplateResult } from '../node_modules/lit-html/lit-html.js';
 
-export interface PropertyDeclaration {
+export interface PropertyDescriptor {
   type: (a: any) => any;
   value?: any;
   attrName?: string;
-  computed: string;
+  computed?: string;
 }
 
-interface PropertyValues {
-  [key: string]: any;
+export interface Map<T> {
+  [key: string]: T;
 }
 
-interface ElementCache {
-  [key: string]: any; // HTMLElement
+export function customElement(tagname: string) {
+  return (clazz: any) => {
+    window.customElements.define(tagname!, clazz);
+  }
 }
 
 export class LitElement extends HTMLElement {
   private _needsRender: boolean = false;
-  private _lookupCache: ElementCache = [];
-  private _values: PropertyValues = [];
-  private _attrMap: any = {};
-  private _deps: any = {};
+  private _lookupCache: Map<HTMLElement> = {};
+  private _values: Map<any> = {};
+  private _attrMap: Map<string> = {};
+  private _deps: Map<Array<Function>> = {};
   private _resolved: boolean = false;
 
   _setPropertyValue(propertyName: string, newValue: any) {
@@ -46,8 +49,8 @@ export class LitElement extends HTMLElement {
     this._setPropertyValue(propertyName, value);
   }
 
-  static get properties(): PropertyDeclaration[] {
-    return [];
+  static get properties(): Map<PropertyDescriptor> {
+    return {};
   }
 
   static get observedAttributes(): string[] {
