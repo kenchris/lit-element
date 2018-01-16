@@ -116,7 +116,7 @@
 
   <code-preview title="Dependencies: Elements pending upgrade doesn't shadow properties">
     <script type="module">
-      import { LitElement, html } from '/node_modules/lit-html-element/lit-element.js';
+      import { LitElement, html, whenAllDefined } from '/node_modules/lit-html-element/lit-element.js';
       class MyApp extends LitElement {
         constructor() {
           super();
@@ -131,6 +131,16 @@
           this.shadowRoot.querySelector('my-fruit').froot = this.fruit;
 
           this.invalidate();
+        }
+        renderCallback() {
+          if ("resolved" in this) {
+            super.renderCallback();
+          } else {
+            whenAllDefined(this.render(this)).then(() => {
+              this.resolved = true;
+              this.renderCallback();
+            });
+          }
         }
         render() {
           return html`
@@ -190,7 +200,7 @@
             return message + " " + message;
           }
           computeMessage(firstName) {
-            return `Konichiwa ${firstName}`;
+            return `Konichiwa ${firstName ? firstName : 'Amigo'}`;
           }
           render() {
             return html`

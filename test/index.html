@@ -124,17 +124,18 @@
             message: {
               type: String,
               computed: 'computeMessage(firstName)',
+              value: "Hello Turtle"
             }
           }
         }
         computeName(firstName, lastName) {
-          return `${firstName ? firstName : ''}${firstName && lastName ? ' ' : ''}${lastName ? lastName : ''}`
+          return `${firstName} ${lastName}`
         }
         computeDoubleMessage(message) {
           return message + " " + message;
         }
         computeMessage(firstName) {
-          return `Hello ${firstName ? firstName : "Rabbit"}`;
+          return `Hello ${firstName}`;
         }
         render() {
           return html`
@@ -159,8 +160,8 @@
             const computedWorld = document.createElement('computed-world');
             document.body.appendChild(computedWorld);
 
-            assert.isTrue(computedWorld.firstName === null);
-            assert.isTrue(computedWorld.message === "Hello Rabbit");
+            assert.isTrue(computedWorld.firstName === undefined);
+            assert.isTrue(computedWorld.message === "Hello Turtle");
 
             computedWorld.firstName = "Kenneth";
 
@@ -171,9 +172,9 @@
             computedWorld.removeAttribute("first-name");
 
             assert.isTrue(computedWorld.getAttribute("first-name") === null);
-            assert.isTrue(computedWorld.firstName === null);
+            assert.isTrue(computedWorld.firstName === undefined);
 
-            assert.isTrue(computedWorld.message === "Hello Rabbit");
+            assert.isTrue(computedWorld.message === "Hello Kenneth");
 
             document.body.removeChild(computedWorld);
           });
@@ -182,9 +183,9 @@
             const computedWorld = document.createElement('computed-world');
             document.body.appendChild(computedWorld);
 
-            assert.isTrue(computedWorld.firstName === null); // no attr set
+            assert.isTrue(computedWorld.firstName === undefined); // no attr set
             assert.isTrue(computedWorld.lastName === "Christiansen"); // value set
-            assert.isTrue(computedWorld.name === "Christiansen");
+            assert.isTrue(computedWorld.name === undefined);
 
             computedWorld.firstName = "Kenneth";
 
@@ -193,9 +194,9 @@
             computedWorld.removeAttribute("first-name");
 
             assert.isTrue(computedWorld.getAttribute("first-name") === null);
-            assert.isTrue(computedWorld.firstName === null);
+            assert.isTrue(computedWorld.firstName === undefined);
 
-            assert.isTrue(computedWorld.name === "Christiansen");
+            assert.isTrue(computedWorld.name === "Kenneth Christiansen");
 
             document.body.removeChild(computedWorld);
           });
@@ -222,9 +223,9 @@
           const def = TestElement.properties.stringAttr;
 
           test('Ignores default value', () => {
-            // Missing attribute for non-boolean is null.
+            // Missing attribute for non-boolean is undefined.
             // Default value is set to 'Example'
-            assert.isTrue(testElement.stringAttr === null);
+            assert.isTrue(testElement.stringAttr === undefined);
           });
 
           test('Changing property reflects attribute', () => {
@@ -266,6 +267,10 @@
           });
 
           test('Changing property reflects attribute', () => {
+            testElement.booleanAttr = true;
+            assert.isTrue(testElement.booleanAttr === true);
+            assert.isTrue(testElement.getAttribute('boolean-attr') === 'boolean-attr');
+
             testElement.booleanAttr = false;
             assert.isTrue(testElement.booleanAttr === false);
             assert.isTrue(testElement.getAttribute('boolean-attr') === null);
@@ -346,7 +351,7 @@
           });
 
           test('initial missing attribute is set during initialization', () => {
-            assert.isTrue(initialValue.prop2 === null);
+            assert.isTrue(initialValue.prop2 === undefined);
           });
 
           test('initial (string) attribute is set during initialization', () => {

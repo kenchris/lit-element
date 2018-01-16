@@ -75,7 +75,7 @@ function attachProperty(prototype: any, propertyName: string, options: PropertyO
   function get(this: LitElement) { return this.__values__[propertyName]; }
   function set(this: LitElement, v: any) {
     let value = v;
-    if (value !== null && value != undefined) {
+    if (value !== null && value !== undefined) {
       // @ts-ignore
       value = typeFn === Array ? v : typeFn(v);
     }
@@ -93,11 +93,26 @@ function attachProperty(prototype: any, propertyName: string, options: PropertyO
   }
 }
 
+export function whenAllDefined(result: TemplateResult) {
+  const template = result.template;
+  const rootNode = template.element.content;
+  const walker = document.createTreeWalker(rootNode, NodeFilter.SHOW_ELEMENT, null as any, false);
+
+  const deps = new Set();
+  while (walker.nextNode()) {
+    const element = walker.currentNode as Element;
+    if (element.tagName.includes('-')) {
+      deps.add(element.tagName.toLowerCase());
+    }
+  }
+
+  return Promise.all(Array.from(deps).map(tagName => customElements.whenDefined(tagName)));
+}
+
 export class LitElement extends HTMLElement {
   private _needsRender: boolean = false;
   private _lookupCache: Map<HTMLElement> = {};
   private _attrMap: Map<string> = {};
-  private _resolved: boolean = false;
   private _deps: Map<Array<Function>> = {};
   __values__: Map<any> = {};
 
@@ -116,7 +131,7 @@ export class LitElement extends HTMLElement {
     if (typeFn.name === 'Boolean') {
       value = (newValue === '') || (!!newValue && newValue === attrName.toLowerCase());
     } else {
-      value = (newValue !== null) ? typeFn(newValue) : null;
+      value = (newValue !== null) ? typeFn(newValue) : undefined;
     }
     this._setPropertyValue(propertyName, value);
   }
@@ -158,7 +173,7 @@ export class LitElement extends HTMLElement {
       }
       // Properties backed by attributes have default values set from attributes, not 'value'.
       if (!attrName && value !== undefined) {
-        (<any>this)[propertyName] = value;
+        this._setPropertyValue(propertyName, value);
       }
 
       const match = /(\w+)\((.+)\)/.exec(computed);
@@ -194,28 +209,7 @@ export class LitElement extends HTMLElement {
   }
 
   renderCallback() {
-    if (this._resolved) {
-      render(this.render(this), this.shadowRoot as ShadowRoot);
-    } else {
-      const template = this.render(this).template;
-      const rootNode = template.element.content;
-      const walker = document.createTreeWalker(rootNode, NodeFilter.SHOW_ELEMENT, null as any, false);
-
-      const deps = new Set();
-      while (walker.nextNode()) {
-        const element = walker.currentNode as Element;
-        if (element.tagName.includes('-')) {
-          deps.add(element.tagName.toLowerCase());
-        }
-      }
-
-      Promise.all(Array.from(deps)
-        .map(tagName => customElements.whenDefined(tagName)))
-        .then(() => {
-          this._resolved = true;
-          this.renderCallback();
-        });
-    }
+    render(this.render(this), this.shadowRoot as ShadowRoot);
   }
 
   // @ts-ignore

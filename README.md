@@ -165,14 +165,38 @@ class RenderShorthand extends LitElement {
 customElements.define('render-shorthand', RenderShorthand.withProperties());
 ```
 
-## Warning about element upgrading
+## Advanced
+
+### Automatical re-rendering
+
+When any of the properties in ```properties()``` change, `lit-element` will automatically re-render. The same goes for attributes which are mapped to properties via ```attrName```.
+
+If you need to re-render manually, you can trigger a re-render via a call to ```invalidate()```. This will schedule a microtask which will render the content just before next ```requestAnimationFrame```.
+
+### Custom hooks before and after rendering
+
+If you need to do extra work before rendering, like setting a property based on another property, a subclass can override ```renderCallback()``` to do work before or after the base class calls ```render()```, including setting the dependent property before ```render()```.
+
+### Element upgrading
 
 Custom elements need to be upgraded before they work. This happens automatically by the browser when it has all the resources it needs.
 
-This mean that if you do a custom element which depends on other custom elements and use properties for data flow, then setting those properties before the element is upgraded, mean that you will end up shadowing the ```lit-html-element``` properties, meaning that the property updates and attribute reflection won't work.
+This mean that if you do a custom element which depends on other custom elements and use properties for data flow, then setting those properties before the element is upgraded, mean that you will end up shadowing the ```lit-html-element``` properties, meaning that the property updates and attribute reflection won't work as expected.
 
-There is a work around for this in ```lit-html-element``` which works by first rendering when all dependencies are present, so you don't need to worryabout setting properties using ``` html`...` ``` inside elements built
-using ```LitElement```.
+There is an API ```whenAllDefined(result, container)``` for working around this issue, by allowing to wait until all of the dependencies have been upgraded. One way to use it is overwriting the ```renderCallback()```:
+
+```javascript
+renderCallback() {
+  if ("resolved" in this) {
+    super.renderCallback();
+  } else {
+    whenAllDefined(this.render(this)).then(() => {
+      this.resolved = true;
+      this.renderCallback();
+    });
+  }
+}
+```
 
 But you might still manage to shadow properties if you manual set values before upgraded like
 
@@ -187,18 +211,6 @@ customElements.whenDefined('computed-world').then(() => {
   document.getElementById('ninja').firstName = "Ninja";
 });
 ```
-
-## Advanced
-
-### Automatical re-rendering
-
-When any of the properties in ```properties()``` change, `lit-element` will automatically re-render. The same goes for attributes which are mapped to properties via ```attrName```.
-
-If you need to re-render manually, you can trigger a re-render via a call to ```invalidate()```. This will schedule a microtask which will render the content just before next ```requestAnimationFrame```.
-
-### Custom hooks before and after rendering
-
-If you need to do extra work before rendering, like setting a property based on another property, a subclass can override ```renderCallback()``` to do work before or after the base class calls ```render()```, including setting the dependent property before ```render()```.
 
 ### Computed properties
 
