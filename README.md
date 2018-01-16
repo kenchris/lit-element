@@ -10,6 +10,7 @@ A base class for creating web components using [lit-html](https://travis-ci.org/
 `lit-element` accomplishes this by integrating [lit-html](https://github.com/PolymerLabs/lit-html) and has the following features:
 * Depends on ES modules and Web Components (polyfills can also be used)
 * Quite small (around 1kB compressed), with only a dependency on [lit-html](https://github.com/PolymerLabs/lit-html)
+* Works great with TypeScript with additional features such as decorators.
 * Good test coverage
 * Easy rendering by implementing ```render()``` methods
   * DOM updates are batched and rendered asynchronously
@@ -129,7 +130,13 @@ customElements.define('hello-world', HelloWorld.withProperties());
 
 ## Attribute reflection
 
-The presence of attributes or not results in actual values, ie. a missing boolean attribute is considered false and all other attributes are considered ```null```. This means that when mapping properties to attributes, there is no such thing as a default value as values are always defined depending on the presence of attributes or not. This means that setting ```value:``` is ignored when ```attrName:``` is present.
+When creating custom elements, a good pattern is to use attributes instead of methods or properties. This allows using the element declaratively like ```<my-dialog opened>```.
+
+For custom elements only consumed internally in other custom elements, it is often faster just relying on properties. This is also the case if you need to pass along complex data such as arrays or objects.
+
+In order to make it easy to work with attributes, ```lit-html-element``` supports mapping between attributes and properties automatically, just by defining the name of the attribute the property should map with via ```attrName:```.
+
+The presence of attributes or not (on elements) results in *actual values*, ie. a missing attribute for a boolean property, means the property will be ```false``` and for all other property types, ```undefined```. This means that when mapping properties to attributes, there is no such thing as a default value as values are always defined depending on the presence, or not, of attributes. This means that setting ```value:``` is ignored when ```attrName:``` is present.
 
 Values are converted using their type constructors, ie ```String(attributeValue)``` for ```String```, ```Number(attributeValue)``` for ```Number```, etc.
 
@@ -216,6 +223,8 @@ customElements.whenDefined('computed-world').then(() => {
 
 If you need some properties that are calculated and updates depending on other properties, that is possible using the 'computed' value, which defined an object method with arguments as a string.
 
+Computed properties *only* update when *all dependent properties are defined*. Default value can be set using ```value:```
+
 NOTE, computed properties can not be reflected to attributes.
 
 Eg.
@@ -258,4 +267,56 @@ customElements.define('computed-world', ComputedWorld.withProperties())
 ```html
 <computed-world></computed-world>
 <computed-world first-name="Kenneth"></computed-world>
+```
+
+## Extensions for TypeScript
+
+It is possible to use ```lit-html-element``` from TypeScript instead of JavaScript. When using TypeScript, you can opt into using decorators instead of defining the static properties accessor ```static get properties()```.
+
+When using property decorators any such static property accessor will be ignored, and you don't need to call ```.withProperties()``` either.
+
+```typescript
+import {
+  LitElement,
+  html,
+  TemplateResult,
+  customElement,
+  property,
+  attribute,
+  computed
+} from '../../src/lit-element.js';
+
+@customElement('test-element')
+export class TestElement extends LitElement {
+  @computed('firstName', 'lastName')
+  get fullName(): string {
+    return `${this.firstName} ${this.lastName}`;
+  }
+
+  @property() firstName: string = 'John';
+  @property() lastName: string = 'Doe';
+
+  @property() human: boolean = true;
+  @property() favorite: any = { fruit: 'pineapple'};
+  @property() kids: Array<string> = ['Peter', 'Anna'];
+
+  @attribute('mother') mother: string;
+  @attribute('super-star') superStar: boolean;
+
+  render(): TemplateResult {
+    return html`
+      <h2>Name: ${this.fullName}</h2>
+      <h2>Is human?: ${human ? "yup" : "nope"}</h2>
+      <h2>Favorites: ${JSON.stringify(this.favorite)}</h2>
+      <h2>Kids: ${JSON.stringify(this.kids)}</h2>
+      <h2>Mother: '${this.mother}'</h2>
+      <h2>Superstar?: '${this.superStar}'</h2>
+    `;
+  }
+}
+
+```
+
+```html
+<test-element super-star mother="Jennifer"></test-element>
 ```
