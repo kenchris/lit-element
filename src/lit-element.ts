@@ -1,11 +1,14 @@
+/// <reference types="reflect-metadata" />
+
 import { html, render } from '../node_modules/lit-html/lib/lit-extended.js';
 import { TemplateResult } from '../node_modules/lit-html/lit-html.js';
 
 export { html } from '../node_modules/lit-html/lib/lit-extended.js';
 export { TemplateResult } from '../node_modules/lit-html/lit-html.js';
 
-export interface PropertyDescriptor {
-  type: (a: any) => any;
+export interface PropertyOptions {
+  type?: BooleanConstructor | DateConstructor | NumberConstructor | StringConstructor|
+  ArrayConstructor | ObjectConstructor;
   value?: any;
   attrName?: string;
   computed?: string;
@@ -18,19 +21,88 @@ export interface Map<T> {
 export function customElement(tagname: string) {
   return (clazz: any) => {
     window.customElements.define(tagname!, clazz);
+  };
+}
+
+export function property(options?: PropertyOptions) {
+  return (prototype: any, propertyName: string): any => {
+    createProperty(prototype, propertyName, options);
+  };
+}
+
+export function attribute(attrName: string) {
+  return (prototype: any, propertyName: string): any => {
+    createProperty(prototype, propertyName, { attrName });
+  };
+}
+
+export function computed<T = any>(...targets: (keyof T)[]) {
+  return (prototype: any, propertyName: string, descriptor: PropertyDescriptor): void => {
+    const fnName = `__compute${propertyName}`;
+
+    // Store a new method on the object as a property.
+    Object.defineProperty(prototype, fnName, { value: descriptor.get });
+    descriptor.get = undefined;
+
+    createProperty(prototype, propertyName, { computed: `${fnName}(${targets.join(',')})` });
+  };
+}
+
+function reflectType(prototype: any, propertyName: string): any {
+  const { hasMetadata = () => false, getMetadata = () => null } = Reflect;
+  if (hasMetadata('design:type', prototype, propertyName)) {
+    return getMetadata('design:type', prototype, propertyName);
+  }
+  return null;
+}
+
+function createProperty(prototype: any, propertyName: string, options: PropertyOptions = {}): void {
+  if (!prototype.constructor.hasOwnProperty('properties')) {
+    Object.defineProperty(prototype.constructor, 'properties', { value: {} });
+  }
+  options.type = options.type || reflectType(prototype, propertyName);
+  prototype.constructor.properties[propertyName] = options;
+
+  // Cannot attach from the decorator, won't override property.
+  Promise.resolve().then(() => attachProperty(prototype, propertyName, options));
+}
+
+// Don't call this from decorators, has to be called from object constructor
+// or it cannot override properties correctly (compute).
+function attachProperty(prototype: any, propertyName: string, options: PropertyOptions) {
+  const { type: typeFn, attrName } = options;
+
+  function get(this: LitElement) { return this.__values__[propertyName]; }
+  function set(this: LitElement, v: any) {
+    let value = v;
+    if (value !== null && value != undefined) {
+      // @ts-ignore
+      value = typeFn === Array ? v : typeFn(v);
+    }
+    this._setPropertyValue(propertyName, value);
+    if (attrName) {
+      this._setAttributeValue(attrName, value, typeFn);
+    }
+    this.invalidate();
+  }
+
+  if (options.computed) { // readonly.
+    Object.defineProperty(prototype, propertyName, { get });
+  } else {
+    Object.defineProperty(prototype, propertyName, { get, set });
   }
 }
 
 export class LitElement extends HTMLElement {
   private _needsRender: boolean = false;
   private _lookupCache: Map<HTMLElement> = {};
-  private _values: Map<any> = {};
   private _attrMap: Map<string> = {};
-  private _deps: Map<Array<Function>> = {};
   private _resolved: boolean = false;
+  private _deps: Map<Array<Function>> = {};
+  __values__: Map<any> = {};
 
   _setPropertyValue(propertyName: string, newValue: any) {
-    this._values[propertyName] = newValue;
+    this.__values__[propertyName] = newValue;
     if (this._deps[propertyName]) {
       this._deps[propertyName].map((fn: Function) => fn());
     }
@@ -49,7 +121,20 @@ export class LitElement extends HTMLElement {
     this._setPropertyValue(propertyName, value);
   }
 
-  static get properties(): Map<PropertyDescriptor> {
+  _setAttributeValue(attrName: string, value: any, typeFn: any) {
+    // @ts-ignore
+    if (typeFn.name === 'Boolean') {
+      if (!value) {
+        this.removeAttribute(attrName);
+      } else {
+        this.setAttribute(attrName, attrName);
+      }
+    } else {
+      this.setAttribute(attrName, value);
+    }
+  }
+
+  static get properties(): Map<PropertyOptions> {
     return {};
   }
 
@@ -64,7 +149,9 @@ export class LitElement extends HTMLElement {
     this.attachShadow({ mode: 'open' });
 
     for (const propertyName in (this.constructor as any).properties) {
-      const { value, attrName, computed } = (this.constructor as any).properties[propertyName];
+      const options = (this.constructor as any).properties[propertyName];
+      const { value, attrName, computed } = options;
+
       // We can only handle properly defined attributes.
       if (typeof(attrName) === 'string' && attrName.length) {
         this._attrMap[attrName] = propertyName;
@@ -73,57 +160,36 @@ export class LitElement extends HTMLElement {
       if (!attrName && value !== undefined) {
         (<any>this)[propertyName] = value;
       }
-      // Only property defined 'computes' are handled of form 'firstName(name, surname)',
-      // with at least one dependency argument.
+
       const match = /(\w+)\((.+)\)/.exec(computed);
-      if (!attrName && match) {
+      if (match) {
         const fnName = match[1];
-        const argNames = match[2].split(/,\s*/);
+        const targets = match[2].split(/,\s*/);
 
-        const boundFn = () => (<any>this)[propertyName] = (<any>this)[fnName].apply(this, argNames.map(argName => (<any>this)[argName]));
+        const computeFn = () => {
+          const values = targets.map(target => (<any>this)[target]);
+          if ((<any>this)[fnName] && values.every(entry => entry !== undefined)) {
+            const computedValue = (<any>this)[fnName].apply(this, values);
+            this._setPropertyValue(propertyName, computedValue);
+          }
+        };
 
-        let hasAtLeastOneValue = false;
-        for (const argName of argNames) {
-          hasAtLeastOneValue = hasAtLeastOneValue || (<any>this)[argName] !== undefined;
-          if (!this._deps[argName]) {
-            this._deps[argName] = [ boundFn ];
+        for (const target of targets) {
+          if (!this._deps[target]) {
+            this._deps[target] = [ computeFn ];
           } else {
-            this._deps[argName].push(boundFn);
+            this._deps[target].push(computeFn);
           }
         }
-        if (hasAtLeastOneValue) {
-          boundFn();
-        }
+        computeFn();
       }
     }
   }
 
   static withProperties() {
     for (const propertyName in this.properties) {
-      const { type: typeFn, attrName } = this.properties[propertyName];
-
-      Object.defineProperty(this.prototype, propertyName, {
-        get(this: LitElement) { return this._values[propertyName]; },
-        set(this: LitElement, v) {
-          const value = typeFn === Array ? v : typeFn(v);
-          this._setPropertyValue(propertyName, value);
-
-          if (attrName) {
-            if (typeFn.name === 'Boolean') {
-              if (!value) {
-                this.removeAttribute(attrName);
-              } else {
-                this.setAttribute(attrName, attrName);
-              }
-            } else {
-              this.setAttribute(attrName, value);
-            }
-          }
-          this.invalidate();
-        },
-      });
+      attachProperty(this.prototype, propertyName, this.properties[propertyName]);
     }
-
     return this;
   }
 

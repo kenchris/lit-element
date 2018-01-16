@@ -16,7 +16,8 @@ const config = {
   noUnusedParameters: true,
   noImplicitReturns: true,
   noFallthroughCasesInSwitch: true,
-  experimentalDecorators: true
+  experimentalDecorators: true,
+  emitDecoratorMetadata: true
 };
 
 gulp.task('compile', function(){
@@ -27,6 +28,9 @@ gulp.task('compile', function(){
 
     gulp.src('lit-element.js')
       .pipe(gulp.dest('node_modules/lit-html-element'));
+
+    let testConfig = config;
+    testConfig.emitDecoratorMetadata = true;
 
     gulp.src(['test/ts/*.ts'])
       .pipe(typescript(config))

@@ -13,10 +13,12 @@
       "noUnusedParameters": true,
       "noImplicitReturns": true,
       "noFallthroughCasesInSwitch": true,
-      "experimentalDecorators": true
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true
     },
     "include": [
-      "src/*.ts"
+      "src/*.ts",
+      "test/ts/*.ts"
     ],
     "exclude": []
   }

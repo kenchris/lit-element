@@ -27,7 +27,8 @@
     "url": "git+https://github.com/kenchris/lit-element.git"
   },
   "dependencies": {
-    "lit-html": "^0.8.0"
+    "lit-html": "^0.8.0",
+    "reflect-metadata": "github:rbuckton/reflect-metadata"
   },
   "devDependencies": {
     "gulp": "^3.9.1",
@@ -41,6 +42,7 @@
     "chai": "^4.1.2",
     "mocha": "^3.5.3",
     "wct-browser-legacy": "0.0.1-pre.11",
-    "web-component-tester": "^6.4.3"
+    "web-component-tester": "^6.4.3",
+    "reflect-metadata": "^0.1.10"
   }
 }

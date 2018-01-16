@@ -1,12 +1,18 @@
 <html>
+  <script src="../../node_modules/reflect-metadata/Reflect.js"></script>
   <script type="module">
   import { TestElement } from './test.js';
   
   void async function() {
     await customElements.whenDefined('test-element');
 
-    const testElement = document.createElement('test-element');
+    const testElement = new TestElement;
+    testElement.setAttribute("boolean-attr", "");
+    testElement.setAttribute("string-attr", "Hello World");
     document.body.appendChild(testElement);
+
+    //const testElement2 = document.createElement('test-element');
+    //document.body.appendChild(testElement2);
   }();
 </script>
 </html>
