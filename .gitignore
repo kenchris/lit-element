@@ -2,3 +2,6 @@ node_modules
 lit-element.d.ts
 lit-element.js
 lit-element.js.map
+lit-element-decorators.d.ts
+lit-element-decorators.js
+lit-element-decorators.js.map

@@ -1,12 +1,5 @@
-import {
-  LitElement,
-  html,
-  TemplateResult,
-  customElement,
-  property,
-  attribute,
-  computed
-} from '../../src/lit-element.js';
+import { LitElement, html, TemplateResult } from '../../src/lit-element.js';
+import { customElement, property, attribute, computed } from '../../src/lit-element-decorators.js';
 
 @customElement('test-element')
 export class TestElement extends LitElement {

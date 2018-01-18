@@ -1,5 +1,3 @@
-/// <reference types="reflect-metadata" />
-
 import { html, render } from '../node_modules/lit-html/lib/lit-extended.js';
 import { TemplateResult } from '../node_modules/lit-html/lit-html.js';
 
@@ -18,67 +16,22 @@ export interface Map<T> {
   [key: string]: T;
 }
 
-export function customElement(tagname: string) {
-  return (clazz: any) => {
-    window.customElements.define(tagname!, clazz);
-  };
-}
-
-export function property(options?: PropertyOptions) {
-  return (prototype: any, propertyName: string): any => {
-    createProperty(prototype, propertyName, options);
-  };
-}
-
-export function attribute(attrName: string) {
-  return (prototype: any, propertyName: string): any => {
-    createProperty(prototype, propertyName, { attrName });
-  };
-}
-
-export function computed<T = any>(...targets: (keyof T)[]) {
-  return (prototype: any, propertyName: string, descriptor: PropertyDescriptor): void => {
-    const fnName = `__compute${propertyName}`;
-
-    // Store a new method on the object as a property.
-    Object.defineProperty(prototype, fnName, { value: descriptor.get });
-    descriptor.get = undefined;
-
-    createProperty(prototype, propertyName, { computed: `${fnName}(${targets.join(',')})` });
-  };
-}
-
-function reflectType(prototype: any, propertyName: string): any {
-  const { hasMetadata = () => false, getMetadata = () => null } = Reflect;
-  if (hasMetadata('design:type', prototype, propertyName)) {
-    return getMetadata('design:type', prototype, propertyName);
-  }
-  return null;
-}
-
-function createProperty(prototype: any, propertyName: string, options: PropertyOptions = {}): void {
+export function createProperty(prototype: any, propertyName: string, options: PropertyOptions = {}): void {
   if (!prototype.constructor.hasOwnProperty('properties')) {
     Object.defineProperty(prototype.constructor, 'properties', { value: {} });
   }
-  options.type = options.type || reflectType(prototype, propertyName);
   prototype.constructor.properties[propertyName] = options;
-
   // Cannot attach from the decorator, won't override property.
   Promise.resolve().then(() => attachProperty(prototype, propertyName, options));
 }
 
-// Don't call this from decorators, has to be called from object constructor
-// or it cannot override properties correctly (compute).
 function attachProperty(prototype: any, propertyName: string, options: PropertyOptions) {
   const { type: typeFn, attrName } = options;
 
   function get(this: LitElement) { return this.__values__[propertyName]; }
   function set(this: LitElement, v: any) {
-    let value = v;
-    if (value !== null && value !== undefined) {
-      // @ts-ignore
-      value = typeFn === Array ? v : typeFn(v);
-    }
+    // @ts-ignore
+    let value = (v === null || v === undefined) ? v : (typeFn === Array ? v : typeFn(v));
     this._setPropertyValue(propertyName, value);
     if (attrName) {
       this._setAttributeValue(attrName, value, typeFn);
@@ -86,11 +39,7 @@ function attachProperty(prototype: any, propertyName: string, options: PropertyO
     this.invalidate();
   }
 
-  if (options.computed) { // readonly.
-    Object.defineProperty(prototype, propertyName, { get });
-  } else {
-    Object.defineProperty(prototype, propertyName, { get, set });
-  }
+  Object.defineProperty(prototype, propertyName, options.computed ? {get} : {get, set});
 }
 
 export function whenAllDefined(result: TemplateResult) {
@@ -142,7 +91,7 @@ export class LitElement extends HTMLElement {
       if (!value) {
         this.removeAttribute(attrName);
       } else {
-        this.setAttribute(attrName, attrName);
+        this.setAttribute(attrName, '');
       }
     } else {
       this.setAttribute(attrName, value);

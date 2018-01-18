@@ -269,7 +269,7 @@
           test('Changing property reflects attribute', () => {
             testElement.booleanAttr = true;
             assert.isTrue(testElement.booleanAttr === true);
-            assert.isTrue(testElement.getAttribute('boolean-attr') === 'boolean-attr');
+            assert.isTrue(testElement.getAttribute('boolean-attr') === '');
 
             testElement.booleanAttr = false;
             assert.isTrue(testElement.booleanAttr === false);
