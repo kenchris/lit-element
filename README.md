@@ -16,7 +16,7 @@ A base class for creating web components using [lit-html](https://travis-ci.org/
   * DOM updates are batched and rendered asynchronously
   * Pre/post render hooks possible via ```renderCallback```
   * Manually trigger re-rendering by calling ```invalidate()```
-  * Access properties and methods using ```this``` or destructoring
+  * Access properties and methods using ```this``` or destructuring
 * Allows defining properties with additional powers
   * Content is invalidated as properties change
   * Properties can define types used for conversion
@@ -150,7 +150,7 @@ From the HTML standard:
 
 ```Array``` and ```Object``` are disencouraged for attributes and have no special handling, thus values are converted using their constructors as any other value types, except boolean.
 
-## Access element properties and methods from destructoring
+## Access element properties and methods from Destructuring
 
 ```this``` is passed to render() for you, which is cleaner. particularly when destructuring. You can still reference them manually, though.
 
@@ -179,10 +179,6 @@ customElements.define('render-shorthand', RenderShorthand.withProperties());
 When any of the properties in ```properties()``` change, `lit-element` will automatically re-render. The same goes for attributes which are mapped to properties via ```attrName```.
 
 If you need to re-render manually, you can trigger a re-render via a call to ```invalidate()```. This will schedule a microtask which will render the content just before next ```requestAnimationFrame```.
-
-### Custom hooks before and after rendering
-
-If you need to do extra work before rendering, like setting a property based on another property, a subclass can override ```renderCallback()``` to do work before or after the base class calls ```render()```, including setting the dependent property before ```render()```.
 
 ### Element upgrading
 
@@ -320,3 +316,196 @@ export class TestElement extends LitElement {
 ```html
 <test-element super-star mother="Jennifer"></test-element>
 ```
+
+### How to enable
+
+In order to use decorators from TypeScript you need to enabled the ```experimentalDecorators``` compiler setting in your ```tsconfig.json``` or use the ```--experimentalDecorators``` flag.
+
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true
+  }
+}
+```
+
+With the above enabled, you can start using decorators but MUST specify the type information manually:
+
+```typescript
+@property({type: String})
+myProperty: string;
+```
+
+As the type often can be derives from the property, especially in TypeScript where you define the type, this feels like a bit of double work. Luckily there is a new specification proposal called [Metadata Reflection](https://rbuckton.github.io/reflect-metadata/) which aims at solving this problem. This proposal has yet to be formally proposed to the TC39 working group (defines the JavaScript standard) but there is already a working polyfill available and experimental support in TypeScript.
+
+With Metadata Reflection enabled it is possible to define property types more concisely:
+
+```typescript
+@property() myProperty: string;
+```
+
+In order to use decorators from TypeScript follow the following steps.
+
+1. You need to enabled the ```emitDecoratorMetadata``` compiler setting in your ```tsconfig.json``` or use the ```--emitDecoratorMetadata``` flag.
+
+```json
+{
+  "compilerOptions": {
+    "emitDecoratorMetadata": true
+  }
+}
+```
+
+2. Install the Metadata Reflection API runtime polyfill from [rbuckton/reflect-metadata](https://github.com/rbuckton/reflect-metadata):
+
+```bash
+$ npm install --save-dev rbuckton/reflect-metadata
+```
+
+3. Load the polyfill at the top-level of your application:
+
+```html
+<script src="/node_modules/reflect-metadata/Reflect.js"></script>
+```
+
+# API documentation
+
+The following API documentation uses Web IDL.
+
+### Static property accessor and `PropertyOptions`
+
+PropertyOptions are used for configuring the properties for the custom element. In JavaScript you need to implement a static property accessor called `properties`, which returns an object where each property of that object has an associated `PropertyOptions`:
+
+```javascript
+class {
+  static get properties() {
+    return { selfDefinedObjectProperty: ... }
+  }
+}
+```
+
+The `PropertyOptions` dictionary has 4 optional properties, shown below in Web IDL format.
+
+```idl
+typedef (BooleanConstructor or DateConstructor or NumberConstructor or StringConstructor or ArrayConstructor or ObjectConstructor) PropertyType;
+
+dictionary PropertyOptions {
+  attribute PropertyType type;
+  attribute any value;
+  attribute USVString attrName;
+  attribute USVString computed;
+}
+```
+
+#### The `type` property
+The `type` property is only optional when using decorators and Metadata Reflection.
+
+#### The `value` property
+
+The `value` property defines a default value for the property. In case of attribute / property mapping via `attrName` (see below), `value` is ignored. When using decorators, the value is taking from the property definition itself:
+
+```typescript
+@property() myProperty: string = "Hello World";
+```
+
+#### The `attrName` property
+
+The `attrName` defines the name of the attribute which should be reflected with the property and the other way around. With `attrName`, default values are ignored and determined from the custom element instead, ie. depending on the presence or not of the attributes.
+
+The attribute name, much be in Latin letters (a-z) including '-' (hyphen). All attributes on HTML elements in HTML documents get ASCII-lowercased automatically, and initial hyphen ('-') gets ignored.
+
+Be aware that data attributes, ie. attributes starting with `data-` are accessible as properties automatically via `element.dataset`.
+
+##### Mapping from property to attribute
+
+When mapped properties get set on the element, the attribute gets updated with the string representation of the new value, unless the new value is `undefined` in which the attribute gets removed.
+
+There is one exception to this, as boolean properties as reflected differently. Setting the property to `true` and the attribute (say `attr`) is set to the empty string `''` (meaning attribute is present, ie. `<div attr>`). Setting the property to `false` and the attribute is removed, ie. `<div>`.
+
+##### Mapping from attribute to property
+
+When the attributes are set, the values are converted using their type constructors, ie ```String(attributeValue)``` for ```String```, ```Number(attributeValue)``` for ```Number```, etc.
+
+```Boolean``` has special handling in order to follow the patterns of the Web Platform.
+
+From the HTML standard:
+
+> The presence of a boolean attribute on an element represents the true value, and the absence of the attribute represents the false value.
+>
+> If the attribute is present, its value must either be the empty string or a value that is an ASCII case-insensitive match for the attribute's canonical name, with no leading or trailing whitespace.
+
+Read more in the [Attribute reflection](#attribute-reflection) section above.
+
+#### The `computed` property
+
+Properties can be calculated from other properties using ```computed```, it takes a string like `'methodName(property1, property2)'`, where `methodName` is a method on the element and `property1` and `property2` are defined.
+
+Computed properties *only* update when *all dependent properties are defined*. Default value can be set using ```value:```
+
+NOTE, computed properties can not be reflected to attributes.
+
+### `renderCallback`
+
+The `renderCallback` allows for custom hooks before and after rendering.
+
+If you need to do extra work before rendering, like setting a property based on another property, a subclass can override ```renderCallback()``` to do work before or after the base class calls ```render()```, including setting the dependent property before ```render()```.
+
+### `withProperties()`
+
+TODO:
+
+### `render(HTMLElement this)`
+
+TODO: Move docs here
+
+### `async invalidate()`
+
+TODO: Move docs here
+
+### `$(DOMString id)`
+
+TODO: Move docs here
+
+### `whenAllDefined(TemplateResult result)`
+
+TODO: Move docs here
+
+## Decorators
+
+### `@customElement(USVString tagname)`
+
+A class decorator for registering the custom element
+
+```typescript
+@customElement('my-element')
+class extends HTMLElement {
+   ...
+}
+```
+
+### `@property(optional PropertyOptions options)`
+
+A property decorator for hooking into the `lit-html-element` property system.
+
+When using the property decorator you don't need to define the static properties accessor ```static get properties()```.
+
+When using property decorators any such static property accessor will be ignored, and you don't need to call ```.withProperties()``` either.
+
+```typescript
+@property({type: String})
+myProperty: string;
+```
+
+Check [Extensions for TypeScript](#extensions-for-typescript) for more info.
+
+### `@attribute(USVString attrName)`
+
+A property decorator for hooking into the `lit-html-element` property system and associating a property with a custom element attribute.
+
+Check [The `attrName` property](#the-attrname-property) for more info.
+
+### `@computed(any dependency1, any dependency2, ...)`
+
+A property decorator for hooking into the `lit-html-element` property system and create a property auto-computed from other properties.
+
+Check [The `computed` property](#the-computed-property) for more info.
