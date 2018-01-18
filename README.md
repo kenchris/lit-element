@@ -509,3 +509,9 @@ Check [The `attrName` property](#the-attrname-property) for more info.
 A property decorator for hooking into the `lit-html-element` property system and create a property auto-computed from other properties.
 
 Check [The `computed` property](#the-computed-property) for more info.
+
+### `@listen(USVString eventName, (USVString or EventTarget) target)`
+
+A method decorator for adding an event listener. You can use a string for target and it will search for an element in the shadowRoot with that `id`.
+
+Event listeners are added after the first rendering, which creates the shadow DOM.

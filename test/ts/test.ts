@@ -1,5 +1,5 @@
 import { LitElement, html, TemplateResult } from '../../src/lit-element.js';
-import { customElement, property, attribute, computed } from '../../src/lit-element-decorators.js';
+import { customElement, property, attribute, computed, listen } from '../../src/lit-element-decorators.js';
 
 @customElement('test-element')
 export class TestElement extends LitElement {
@@ -26,6 +26,11 @@ export class TestElement extends LitElement {
       return `${firstName} ${lastName}`;
     }
 
+    @listen('click', 'button')
+    onButtonClicked() {
+      this.booleanProp = !this.booleanProp;
+    }
+
     render({ stringProp, booleanProp, objectProp, arrayProp }): TemplateResult {
       const props = TestElement.properties;
       const getType = (name: string): string => props[name].type.name;
@@ -33,6 +38,7 @@ export class TestElement extends LitElement {
       return html`
         RealName: ${this.realName}<br>
         Name: ${this.name}<br>
+        <button id="button">Click me!</button>
         <h2>${getType('stringProp')}: ${stringProp}</h2>
         <h2>${getType('booleanProp')}: ${booleanProp}</h2>
         <h2>${getType('objectProp')}: ${JSON.stringify(objectProp)}</h2>

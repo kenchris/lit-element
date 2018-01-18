@@ -35,6 +35,15 @@ export function computed<T = any>(...targets: (keyof T)[]) {
   };
 }
 
+export function listen(eventName: string, target: string|EventTarget) {
+  return (prototype: any, methodName: string) => {
+    if (!prototype.constructor.hasOwnProperty('listeners')) {
+      prototype.constructor.listeners = [];
+    }
+    prototype.constructor.listeners.push({ target, eventName, handler: prototype[methodName] });
+  }
+};
+
 function reflectType(prototype: any, propertyName: string): any {
   const { hasMetadata = () => false, getMetadata = () => null } = Reflect;
   if (hasMetadata('design:type', prototype, propertyName)) {

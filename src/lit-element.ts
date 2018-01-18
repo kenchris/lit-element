@@ -12,6 +12,12 @@ export interface PropertyOptions {
   computed?: string;
 }
 
+interface ListenerOptions {
+  target: string | EventTarget,
+  eventName: string,
+  handler: Function
+}
+
 export interface Map<T> {
   [key: string]: T;
 }
@@ -176,7 +182,12 @@ export class LitElement extends HTMLElement {
       this._setPropertyValueFromAttributeValue(attrName, this.getAttribute(attrName));
     }
 
-    this.invalidate();
+    this.invalidate().then(() => {
+      for (const listener of (this.constructor as any).listeners as Array<ListenerOptions>) {
+        const target = typeof listener.target === 'string' ? this.$(listener.target) : listener.target;
+        target.addEventListener(listener.eventName, listener.handler.bind(this));
+      }
+    });
   }
 
   async invalidate() {
