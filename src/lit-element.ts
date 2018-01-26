@@ -12,7 +12,7 @@ export interface PropertyOptions {
   computed?: string;
 }
 
-interface ListenerOptions {
+export interface ListenerOptions {
   target: string | EventTarget,
   eventName: string,
   handler: Function
@@ -106,6 +106,10 @@ export class LitElement extends HTMLElement {
 
   static get properties(): Map<PropertyOptions> {
     return {};
+  }
+
+  static get listeners(): Array<ListenerOptions> {
+    return [];
   }
 
   static get observedAttributes(): string[] {
